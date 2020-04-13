@@ -66,3 +66,37 @@ class ExceptionPath(models.Model):
 
     def __str__(self):
         return f'{self.host}{self.path}'
+
+
+class Request(models.Model):
+    id = models.BigAutoField(
+        primary_key=True
+    )
+    dt_create = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Date and Time create entry'
+    )
+    ip = models.ForeignKey(
+        'IpAddress',
+        on_delete=models.CASCADE,
+        null=True,
+        verbose_name='Ip address'
+    )
+    ua = models.ForeignKey(
+        'UserAgent',
+        on_delete=models.SET_NULL,
+        null=True,
+        verbose_name='User-Agent'
+    )
+    host = models.ForeignKey(
+        'Host',
+        on_delete=models.CASCADE,
+        null=True
+    )
+    path = models.ForeignKey(
+        'Path',
+        on_delete=models.CASCADE,
+        null=True
+    )
+    status_code = models.IntegerField()
+    response_time = models.FloatField()
