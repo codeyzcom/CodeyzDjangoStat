@@ -1,6 +1,9 @@
 from django.db import models
 
-from . import EXCEPTION_TYPE
+from . import (
+    EXCEPTION_TYPE,
+    HTTP_STATUSES,
+)
 
 
 class Host(models.Model):
@@ -10,6 +13,33 @@ class Host(models.Model):
 
     def __str__(self):
         return self.host
+
+
+class IpAddress(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    dt_create = models.DateTimeField(auto_now_add=True)
+    ip = models.GenericIPAddressField(db_index=True, unique=True)
+
+    def __str__(self):
+        return str(self.ip)
+
+
+class UserAgent(models.Model):
+    dt_create = models.DateTimeField(auto_now_add=True)
+    data = models.TextField(db_index=True, unique=True)
+
+    def __str__(self):
+        return self.data[:50]
+
+
+class Path(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    dt_create = models.DateTimeField(auto_now_add=True)
+    host = models.ManyToManyField('Host')
+    path = models.TextField(db_index=True)
+
+    def __str__(self):
+        return self.path[:50]
 
 
 class ExceptionPath(models.Model):
@@ -33,3 +63,6 @@ class ExceptionPath(models.Model):
     path = models.TextField(
         db_index=True
     )
+
+    def __str__(self):
+        return f'{self.host}{self.path}'
