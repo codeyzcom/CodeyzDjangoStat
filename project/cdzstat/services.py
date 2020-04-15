@@ -1,6 +1,8 @@
 import re
 import time
 
+from .settings import CDZSTAT_IGNORE_BOTS
+
 from .models import (
     ExceptionPath,
     Request,
@@ -32,7 +34,7 @@ class ExceptionService:
                 ).order_by('data').values_list('data', flat=True)
             )
 
-        if user_agent in USER_AGENT_CACHE:
+        if user_agent in USER_AGENT_CACHE and CDZSTAT_IGNORE_BOTS:
             return True
 
         regex_exc = ExceptionPath.objects.filter(
