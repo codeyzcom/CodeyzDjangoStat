@@ -9,3 +9,5 @@ HTTP_STATUSES = (
     ('403', '403: Forbidden'),
     ('404', '404: Not Found')
 )
+
+USER_AGENT_CACHE = []

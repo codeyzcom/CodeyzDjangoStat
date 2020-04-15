@@ -26,6 +26,7 @@ class IpAddress(models.Model):
 
 class UserAgent(models.Model):
     dt_create = models.DateTimeField(auto_now_add=True)
+    is_bot = models.BooleanField(default=False)
     data = models.TextField(db_index=True, unique=True)
 
     def __str__(self):

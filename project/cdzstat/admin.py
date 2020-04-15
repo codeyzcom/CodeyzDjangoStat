@@ -27,7 +27,9 @@ class IpAddressAdmin(admin.ModelAdmin):
 
 @admin.register(UserAgent)
 class UserAgentAdmin(admin.ModelAdmin):
-    list_display = ('id', 'data')
+    list_display = ('id', 'data', 'is_bot')
+    search_fields = ('data',)
+    list_filter = ('is_bot',)
 
 
 @admin.register(Request)

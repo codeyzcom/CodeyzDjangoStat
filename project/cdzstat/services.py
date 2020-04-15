@@ -12,6 +12,8 @@ from .models import (
 
 from .urls import get_ip
 
+from . import USER_AGENT_CACHE
+
 
 class ExceptionService:
 
@@ -21,6 +23,17 @@ class ExceptionService:
     def check(self):
         host = self._req.META.get('HTTP_HOST')
         path = self._req.path
+        user_agent = self._req.META['HTTP_USER_AGENT']
+
+        if not USER_AGENT_CACHE:
+            USER_AGENT_CACHE.extend(
+                UserAgent.objects.filter(
+                    is_bot=True
+                ).order_by('data').values_list('data', flat=True)
+            )
+
+        if user_agent in USER_AGENT_CACHE:
+            return True
 
         regex_exc = ExceptionPath.objects.filter(
             state=True,
