@@ -14,7 +14,11 @@ from .models import (
 
 from .urls import get_ip
 
-from . import USER_AGENT_CACHE
+from . import (
+    USER_AGENT_CACHE,
+    EXCEPTION_CACHE_REGEX,
+    EXCEPTION_CACHE_DIRECT,
+)
 
 
 class ExceptionService:
@@ -37,22 +41,25 @@ class ExceptionService:
         if CDZSTAT_IGNORE_BOTS and user_agent in USER_AGENT_CACHE:
             return True
 
-        regex_exc = ExceptionPath.objects.filter(
-            state=True,
-            except_type='regex'
-        ).all()
+        if not EXCEPTION_CACHE_REGEX:
+            EXCEPTION_CACHE_REGEX.extend(ExceptionPath.objects.filter(
+                state=True,
+                except_type='regex'
+            ))
 
-        for r in regex_exc:
+        for r in EXCEPTION_CACHE_REGEX:
             match = re.match(r.path, path, re.IGNORECASE)
             if match:
                 return True
 
-        exc = ExceptionPath.objects.filter(
-            state=True,
-            host__host=host,
-            path__exact=path
-        )
-        return True if exc else False
+        if not EXCEPTION_CACHE_DIRECT:
+            EXCEPTION_CACHE_DIRECT[host] = (
+                ExceptionPath.objects.filter(state=True, host__host=host).all()
+            )
+
+        paths = EXCEPTION_CACHE_DIRECT.get(host)
+        if paths and path in paths:
+            return True
 
 
 class LowLevelService:
