@@ -27,14 +27,14 @@ class ExceptionService:
         path = self._req.path
         user_agent = self._req.META['HTTP_USER_AGENT']
 
-        if not USER_AGENT_CACHE:
+        if CDZSTAT_IGNORE_BOTS and not USER_AGENT_CACHE:
             USER_AGENT_CACHE.extend(
                 UserAgent.objects.filter(
                     is_bot=True
                 ).order_by('data').values_list('data', flat=True)
             )
 
-        if user_agent in USER_AGENT_CACHE and CDZSTAT_IGNORE_BOTS:
+        if CDZSTAT_IGNORE_BOTS and user_agent in USER_AGENT_CACHE:
             return True
 
         regex_exc = ExceptionPath.objects.filter(
