@@ -14,7 +14,11 @@ from .models import (
 
 from .urls import get_ip
 
-from . import USER_AGENT_CACHE
+from . import (
+    USER_AGENT_CACHE,
+    EXCEPTION_CACHE_REGEX,
+    EXCEPTION_CACHE_DIRECT,
+)
 
 
 class ExceptionService:
@@ -27,32 +31,44 @@ class ExceptionService:
         path = self._req.path
         user_agent = self._req.META['HTTP_USER_AGENT']
 
-        if not USER_AGENT_CACHE:
+        if not CDZSTAT_IGNORE_BOTS and not USER_AGENT_CACHE:
             USER_AGENT_CACHE.extend(
                 UserAgent.objects.filter(
                     is_bot=True
                 ).order_by('data').values_list('data', flat=True)
             )
 
-        if user_agent in USER_AGENT_CACHE and CDZSTAT_IGNORE_BOTS:
+        if not CDZSTAT_IGNORE_BOTS and user_agent in USER_AGENT_CACHE:
             return True
 
-        regex_exc = ExceptionPath.objects.filter(
-            state=True,
-            except_type='regex'
-        ).all()
+        if not EXCEPTION_CACHE_REGEX:
+            result = ExceptionPath.objects.filter(
+                state=True,
+                except_type='regex',
+                host__host=host
+            ).values_list('path', flat=True)
+            EXCEPTION_CACHE_REGEX[host] = tuple(result)
 
-        for r in regex_exc:
-            match = re.match(r.path, path, re.IGNORECASE)
-            if match:
-                return True
+        regex_path = EXCEPTION_CACHE_REGEX.get(host)
+        if regex_path:
+            for r in regex_path:
+                match = re.match(r, path, re.IGNORECASE)
+                if match:
+                    return True
 
-        exc = ExceptionPath.objects.filter(
-            state=True,
-            host__host=host,
-            path__exact=path
-        )
-        return True if exc else False
+        if not EXCEPTION_CACHE_DIRECT:
+            result = (
+                ExceptionPath.objects.filter(
+                    state=True,
+                    except_type='match',
+                    host__host=host
+                ).values_list('path', flat=True)
+            )
+            EXCEPTION_CACHE_DIRECT[host] = tuple(result)
+
+        direct_paths = EXCEPTION_CACHE_DIRECT.get(host)
+        if direct_paths and path in direct_paths:
+            return True
 
 
 class LowLevelService:
