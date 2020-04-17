@@ -1,2 +1,11 @@
-Django==3.0.3
-flake8
+Django==3.0.5
+
+# Testing
+
+flake8==3.7.9
+pytest==5.4.1
+pytest-cov==2.8.1
+pytest-django==3.9.0
+pytest-flake8==1.0.4
+pytest-xdist==1.31.0
+

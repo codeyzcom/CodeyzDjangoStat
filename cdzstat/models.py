@@ -1,9 +1,6 @@
 from django.db import models
 
-from . import (
-    EXCEPTION_TYPE,
-    HTTP_STATUSES,
-)
+from . import EXCEPTION_TYPE
 
 
 class Host(models.Model):
