@@ -12,7 +12,7 @@ from .models import (
     Path,
 )
 
-from .urls import get_ip
+from .utils import get_ip
 
 from . import (
     USER_AGENT_CACHE,
