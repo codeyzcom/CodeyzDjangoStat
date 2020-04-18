@@ -1,7 +1,7 @@
 function getOsVersion() {
-    var nAgt = navigator.userAgent;
-    var os;
-    var clientStrings = [
+    let nAgt = navigator.userAgent;
+    let os;
+    let clientStrings = [
         {s: 'Windows 10', r: /(Windows 10.0|Windows NT 10.0)/},
         {s: 'Windows 8.1', r: /(Windows 8.1|Windows NT 6.3)/},
         {s: 'Windows 8', r: /(Windows 8|Windows NT 6.2)/},
@@ -33,8 +33,8 @@ function getOsVersion() {
             r: /(nuhk|Googlebot|Yammybot|Openbot|Slurp|MSNBot|Ask Jeeves\/Teoma|ia_archiver)/
         }
     ];
-    for (var id in clientStrings) {
-        var cs = clientStrings[id];
+    for (let id in clientStrings) {
+        let cs = clientStrings[id];
         if (cs.r.test(nAgt)) {
             os = cs.s;
             break;
