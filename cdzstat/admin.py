@@ -35,7 +35,7 @@ class UserAgentAdmin(admin.ModelAdmin):
 @admin.register(Request)
 class RequestAdmin(admin.ModelAdmin):
     list_display = ('id', 'path', 'ip', 'status_code', 'response_time')
-    list_filter = ('status_code', )
+    list_filter = ('status_code',)
     readonly_fields = (
         'id',
         'dt_create',
