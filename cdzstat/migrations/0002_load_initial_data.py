@@ -2,22 +2,11 @@ import os
 from pathlib import Path
 
 from django.db import migrations
-from django.core import serializers
+from django.core.management import call_command
 
 
 def load_fixture_user_agent(apps, scheme_editor):
-    current_path = Path().absolute()
-    fixture_file = os.path.join(
-        current_path,
-        'cdzstat',
-        'fixtures',
-        'UserAgentFixture.json'
-    )
-
-    with open(fixture_file, 'rb') as fin:
-        objects = serializers.deserialize('json', fin, ignorenonexistent=True)
-        for obj in objects:
-            obj.save()
+    call_command('loaddata', 'UserAgentFixture', app_label='cdzstat')
 
 
 def unload_fixture_user_agent(apps, scheme_editor):
