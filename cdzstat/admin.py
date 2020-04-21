@@ -23,6 +23,7 @@ class PathAdmin(admin.ModelAdmin):
 @admin.register(IpAddress)
 class IpAddressAdmin(admin.ModelAdmin):
     list_display = ('id', 'ip', 'dt_create')
+    search_fields = ('ip', )
 
 
 @admin.register(UserAgent)
@@ -34,7 +35,10 @@ class UserAgentAdmin(admin.ModelAdmin):
 
 @admin.register(Request)
 class RequestAdmin(admin.ModelAdmin):
-    list_display = ('id', 'path', 'ip', 'status_code', 'response_time')
+    list_display = (
+        'id', 'path', 'ip', 'status_code', 'response_time', 'dt_create'
+    )
+    search_fields = ('ip__ip', )
     list_filter = ('status_code',)
     readonly_fields = (
         'id',

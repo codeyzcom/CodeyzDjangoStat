@@ -37,7 +37,7 @@ class Path(models.Model):
     path = models.TextField(db_index=True)
 
     def __str__(self):
-        return self.path[:50]
+        return self.path[:100]
 
 
 class ExceptionPath(models.Model):
