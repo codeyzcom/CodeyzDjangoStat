@@ -3,6 +3,34 @@ from django.db import models
 from . import EXCEPTION_TYPE
 
 
+class TimeZone(models.Model):
+    name = models.CharField(max_length=64)
+    abbr = models.CharField(max_length=8, verbose_name='abbreviation')
+    offset = models.FloatField()
+    isdst = models.BooleanField(verbose_name='Is Daylight Saving Time')
+    text = models.CharField(max_length=64)
+
+
+class Utc(models.Model):
+    time_zone = models.ForeignKey('TimeZone', on_delete=models.CASCADE)
+    data = models.CharField(max_length=32)
+
+
+class ScreenParam(models.Model):
+    height = models.IntegerField()
+    width = models.IntegerField()
+    color_depth = models.IntegerField()
+    pixel_depth = models.IntegerField()
+
+
+class Platform(models.Model):
+    data = models.CharField(max_length=32)
+
+
+class UserLang(models.Model):
+    data = models.CharField(max_length=8)
+
+
 class Host(models.Model):
     id = models.AutoField(primary_key=True)
     dt_create = models.DateTimeField(auto_now_add=True)
