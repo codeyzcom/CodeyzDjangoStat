@@ -10,10 +10,16 @@ class TimeZone(models.Model):
     isdst = models.BooleanField(verbose_name='Is Daylight Saving Time')
     text = models.CharField(max_length=64)
 
+    def __str__(self):
+        return self.name
+
 
 class Utc(models.Model):
     time_zone = models.ForeignKey('TimeZone', on_delete=models.CASCADE)
     data = models.CharField(max_length=32)
+
+    def __str__(self):
+        return self.data
 
 
 class ScreenParam(models.Model):
@@ -22,13 +28,22 @@ class ScreenParam(models.Model):
     color_depth = models.IntegerField()
     pixel_depth = models.IntegerField()
 
+    def __str__(self):
+        return f'H: {self.height}, W: {self.width}'
+
 
 class Platform(models.Model):
     data = models.CharField(max_length=32)
 
+    def __str__(self):
+        return self.data
+
 
 class UserLang(models.Model):
     data = models.CharField(max_length=8)
+
+    def __str__(self):
+        return self.data
 
 
 class Host(models.Model):

@@ -59,19 +59,19 @@ class TimeZoneAdmin(admin.ModelAdmin):
 
 @admin.register(models.Utc)
 class UtcAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('data', 'time_zone')
 
 
 @admin.register(models.ScreenParam)
 class ScreenParamAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('height', 'width', 'color_depth', 'pixel_depth')
 
 
 @admin.register(models.Platform)
 class PlatformAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('data',)
 
 
 @admin.register(models.UserLang)
 class UserLangAdmin(admin.ModelAdmin):
-    pass
+    list_display = ('data',)
