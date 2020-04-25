@@ -59,3 +59,21 @@ function sendData(data) {
     XHR.send();
     console.log(urlEncodedData)
 }
+
+
+let data = {};
+data['screen_height'] = screen.height;
+data['screen_width'] = screen.width;
+data['screen_color_depth'] = screen.colorDepth;
+data['screen_pixel_depth'] = screen.pixelDepth;
+data['win_inner_height'] = window.innerHeight;
+data['win_inner_width'] = window.innerWidth;
+data['doc_ref'] = document.referrer;
+data['doc_url'] = document.URL;
+data['tz_info'] = Intl.DateTimeFormat().resolvedOptions().timeZone;
+data['user_lang'] = navigator.language || navigator.userLanguage;
+data['platform'] = getOsVersion();
+
+(function () {
+    sendData(data);
+})();
