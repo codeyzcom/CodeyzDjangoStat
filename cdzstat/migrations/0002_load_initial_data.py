@@ -11,6 +11,24 @@ def unload_fixture_user_agent(apps, scheme_editor):
     UserAgent.objects.all().delete()
 
 
+def load_fixture_timezone(apps, scheme_editor):
+    call_command('loaddata', 'TimeZoneFixture', app_label='cdzstat')
+
+
+def unload_fixture_timezone(apps, scheme_editor):
+    TimeZone = apps.get_model('cdzstat', 'TimeZone')
+    TimeZone.objects.all().delete()
+
+
+def load_fixture_utc(apps, scheme_editor):
+    call_command('loaddata', 'UtcFixture', app_label='cdzstat')
+
+
+def unload_fixture_utc(apps, scheme_editor):
+    Utc = apps.get_model('cdzstat', 'Utc')
+    Utc.objects.all().delete()
+
+
 def load_exception_path(apps, scheme_editor):
     ExceptionPath = apps.get_model('cdzstat', 'ExceptionPath')
     ExceptionPath.objects.create(except_type='regex', path='^/admin/.*')
@@ -35,4 +53,12 @@ class Migration(migrations.Migration):
             load_exception_path,
             reverse_code=unload_exception_path
         ),
+        migrations.RunPython(
+            load_fixture_timezone,
+            reverse_code=unload_fixture_timezone
+        ),
+        migrations.RunPython(
+            load_fixture_utc,
+            reverse_code=unload_fixture_utc
+        )
     ]
