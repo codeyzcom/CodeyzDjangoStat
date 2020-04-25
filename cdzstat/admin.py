@@ -1,44 +1,37 @@
 from django.contrib import admin
 
-from .models import (
-    Host,
-    Path,
-    Request,
-    IpAddress,
-    UserAgent,
-    ExceptionPath
-)
+from cdzstat import models
 
 
-@admin.register(Host)
+@admin.register(models.Host)
 class HostAdmin(admin.ModelAdmin):
     list_display = ('id', 'host')
 
 
-@admin.register(Path)
+@admin.register(models.Path)
 class PathAdmin(admin.ModelAdmin):
     list_display = ('id', 'path')
 
 
-@admin.register(IpAddress)
+@admin.register(models.IpAddress)
 class IpAddressAdmin(admin.ModelAdmin):
     list_display = ('id', 'ip', 'dt_create')
-    search_fields = ('ip', )
+    search_fields = ('ip',)
 
 
-@admin.register(UserAgent)
+@admin.register(models.UserAgent)
 class UserAgentAdmin(admin.ModelAdmin):
     list_display = ('id', 'data', 'is_bot')
     search_fields = ('data',)
     list_filter = ('is_bot',)
 
 
-@admin.register(Request)
+@admin.register(models.Request)
 class RequestAdmin(admin.ModelAdmin):
     list_display = (
         'id', 'path', 'ip', 'status_code', 'response_time', 'dt_create'
     )
-    search_fields = ('ip__ip', )
+    search_fields = ('ip__ip',)
     list_filter = ('status_code',)
     readonly_fields = (
         'id',
@@ -52,6 +45,31 @@ class RequestAdmin(admin.ModelAdmin):
     )
 
 
-@admin.register(ExceptionPath)
+@admin.register(models.ExceptionPath)
 class ExceptionPathAdmin(admin.ModelAdmin):
     list_display = ('id', 'host', 'path', 'state')
+
+
+@admin.register(models.TimeZone)
+class TimeZoneAdmin(admin.ModelAdmin):
+    list_display = ('name', 'offset', 'abbr', 'isdst')
+
+
+@admin.register(models.Utc)
+class UtcAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(models.ScreenParam)
+class ScreenParamAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(models.Platform)
+class PlatformAdmin(admin.ModelAdmin):
+    pass
+
+
+@admin.register(models.UserLang)
+class UserLangAdmin(admin.ModelAdmin):
+    pass
