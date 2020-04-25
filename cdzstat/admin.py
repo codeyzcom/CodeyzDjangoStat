@@ -53,6 +53,8 @@ class ExceptionPathAdmin(admin.ModelAdmin):
 @admin.register(models.TimeZone)
 class TimeZoneAdmin(admin.ModelAdmin):
     list_display = ('name', 'offset', 'abbr', 'isdst')
+    list_filter = ('isdst', 'offset')
+    search_fields = ('name',)
 
 
 @admin.register(models.Utc)
