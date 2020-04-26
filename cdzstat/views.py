@@ -1,6 +1,9 @@
 from django.http import HttpResponse
 
+from cdzstat.services import HeightLevelService
+
 
 def collector(request):
-    # ToDo statistics processing
+    hls = HeightLevelService(request)
+    hls.process()
     return HttpResponse(status=204)
