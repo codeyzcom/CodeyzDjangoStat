@@ -106,3 +106,14 @@ class LowLevelService:
             status_code=status_code,
             response_time=elapsed
         )
+
+
+class HeightLevelService:
+
+    def __init__(self, request):
+        self._req = request
+
+    def process(self):
+        params = self._req.GET
+        for k, v in params.items():
+            print(f'{k}: {v}')
