@@ -43,6 +43,39 @@ function getOsVersion() {
     return os;
 }
 
+function getBrowser() {
+    let ua = navigator.userAgent, tem,
+        M = ua.match(/(opera|chrome|yabrowser|safari|firefox|msie|trident(?=\/))\/?\s*(\S+)/i) || [];
+    if (/trident/i.test(M[1])) {
+        tem = /\brv[ :]+(\d+)/g.exec(ua) || [];
+        return tem[1] || '';
+    }
+    if (M[1] === 'Chrome') {
+        tem = ua.match(/\b(OPR|Edge|YaBrowser?)\/(\S+)/);
+        if (tem != null) return tem.slice(1).join(' ').replace('OPR', 'Opera').replace('Edg ', 'Edge ').replace('YaBrowser', 'YaBrowser');
+    }
+    M = M[2] ? [M[1], M[2]] : [navigator.appName, navigator.appVersion, '-?'];
+    if ((tem = ua.match(/version\/(\S+)/i)) != null) M.splice(1, 1, tem[1]);
+    return M.join(' ');
+}
+
+
+let data = {};
+data['screen_height'] = screen.height;
+data['screen_width'] = screen.width;
+data['screen_color_depth'] = screen.colorDepth;
+data['screen_pixel_depth'] = screen.pixelDepth;
+data['window_height'] = window.innerHeight;
+data['window_width'] = window.innerWidth;
+data['doc_ref'] = document.referrer;
+data['doc_url'] = document.URL;
+data['tz_info'] = Intl.DateTimeFormat().resolvedOptions().timeZone;
+data['user_lang'] = navigator.language || navigator.userLanguage;
+data['platform'] = navigator.platform;
+data['os_version'] = getOsVersion();
+data['browser'] = getBrowser();
+
+
 function sendData(data) {
     const XHR = new XMLHttpRequest();
 
@@ -60,19 +93,6 @@ function sendData(data) {
     console.log(urlEncodedData)
 }
 
-
-let data = {};
-data['screen_height'] = screen.height;
-data['screen_width'] = screen.width;
-data['screen_color_depth'] = screen.colorDepth;
-data['screen_pixel_depth'] = screen.pixelDepth;
-data['window_height'] = window.innerHeight;
-data['window_width'] = window.innerWidth;
-data['doc_ref'] = document.referrer;
-data['doc_url'] = document.URL;
-data['tz_info'] = Intl.DateTimeFormat().resolvedOptions().timeZone;
-data['user_lang'] = navigator.language || navigator.userLanguage;
-data['platform'] = getOsVersion();
 
 (function () {
     sendData(data);
