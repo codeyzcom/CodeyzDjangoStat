@@ -3,6 +3,56 @@ from django.test import TestCase
 from cdzstat import models
 
 
+class TimeZoneTest(TestCase):
+
+    def setUp(self) -> None:
+        self.tz = models.TimeZone.objects.filter(name__exact='UTC').first()
+
+    def test_str(self):
+        self.assertEqual(str(self.tz), 'UTC')
+
+
+class UtcTest(TestCase):
+
+    def setUp(self) -> None:
+        self.utc = models.Utc.objects.filter(data='Europe/London').first()
+
+    def test_str(self):
+        self.assertEqual(str(self.utc), 'Europe/London')
+
+
+class ScreenParamTest(TestCase):
+
+    def setUp(self) -> None:
+        self.param = models.ScreenParam.objects.create(
+            height=768,
+            width=1024,
+            color_depth=24,
+            pixel_depth=24,
+        )
+
+    def test_str(self):
+        self.assertEqual(str(self.param), 'H: 768, W: 1024')
+
+
+class PlatformTest(TestCase):
+
+    def setUp(self) -> None:
+        self.platform = models.Platform.objects.create(data='Linux')
+
+    def test_str(self):
+        self.assertEqual(str(self.platform), 'Linux')
+
+
+class UserLangTest(TestCase):
+
+    def setUp(self) -> None:
+        self.ua = models.UserLang.objects.create(data='en')
+
+    def test_str(self):
+        self.assertEqual(str(self.ua), 'en')
+
+
 class HostTest(TestCase):
 
     def setUp(self) -> None:
