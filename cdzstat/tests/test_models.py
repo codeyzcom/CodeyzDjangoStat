@@ -21,18 +21,33 @@ class UtcTest(TestCase):
         self.assertEqual(str(self.utc), 'Europe/London')
 
 
-class ScreenParamTest(TestCase):
+class ScreenSizeTest(TestCase):
 
     def setUp(self) -> None:
-        self.param = models.ScreenParam.objects.create(
-            height=768,
-            width=1024,
-            color_depth=24,
-            pixel_depth=24,
+        self.screen = models.ScreenSize.objects.create(height=768, width=1024)
+
+    def test_str(self):
+        self.assertEqual(str(self.screen), 'H: 768, W: 1024')
+
+
+class WindowSizeTest(TestCase):
+
+    def setUp(self) -> None:
+        self.window = models.WindowSize.objects.create(height=768, width=1024)
+
+    def test_str(self):
+        self.assertEqual(str(self.window), 'H: 768, W: 1024')
+
+
+class ColorParamTest(TestCase):
+
+    def setUp(self) -> None:
+        self.color = models.ColorParam.objects.create(
+            color_depth=24, pixel_depth=24
         )
 
     def test_str(self):
-        self.assertEqual(str(self.param), 'H: 768, W: 1024')
+        self.assertEqual(str(self.color), 'Color: 24, Pixel: 24')
 
 
 class PlatformTest(TestCase):

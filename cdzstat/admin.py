@@ -62,9 +62,19 @@ class UtcAdmin(admin.ModelAdmin):
     list_display = ('data', 'time_zone')
 
 
-@admin.register(models.ScreenParam)
-class ScreenParamAdmin(admin.ModelAdmin):
-    list_display = ('height', 'width', 'color_depth', 'pixel_depth')
+@admin.register(models.ScreenSize)
+class ScreenSizeAdmin(admin.ModelAdmin):
+    list_display = ('height', 'width')
+
+
+@admin.register(models.WindowSize)
+class WindowSizeAdmin(admin.ModelAdmin):
+    list_display = ('height', 'width')
+
+
+@admin.register(models.ColorParam)
+class ColorParamAdmin(admin.ModelAdmin):
+    list_display = ('color_depth', 'pixel_depth')
 
 
 @admin.register(models.Platform)

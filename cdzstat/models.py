@@ -22,14 +22,28 @@ class Utc(models.Model):
         return self.data
 
 
-class ScreenParam(models.Model):
+class ScreenSize(models.Model):
     height = models.IntegerField()
     width = models.IntegerField()
+
+    def __str__(self):
+        return f'H: {self.height}, W: {self.width}'
+
+
+class WindowSize(models.Model):
+    height = models.IntegerField()
+    width = models.IntegerField()
+
+    def __str__(self):
+        return f'H: {self.height}, W: {self.width}'
+
+
+class ColorParam(models.Model):
     color_depth = models.IntegerField()
     pixel_depth = models.IntegerField()
 
     def __str__(self):
-        return f'H: {self.height}, W: {self.width}'
+        return f'Color: {self.color_depth}, Pixel: {self.pixel_depth}'
 
 
 class Platform(models.Model):
