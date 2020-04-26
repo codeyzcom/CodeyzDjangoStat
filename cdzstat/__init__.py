@@ -1,3 +1,5 @@
+default_app_config = 'cdzstat.apps.CdzstatConfig'
+
 EXCEPTION_TYPE = (
     ('regex', 'By regular expression'),
     ('match', 'Direct match')
