@@ -31,6 +31,9 @@ class ExceptionService:
         path = self._req.path
         user_agent = self._req.META['HTTP_USER_AGENT']
 
+        if path == '/cdzstat/collect_statistic':
+            return True
+
         if not CDZSTAT_IGNORE_BOTS and not USER_AGENT_CACHE:
             USER_AGENT_CACHE.extend(
                 UserAgent.objects.filter(
