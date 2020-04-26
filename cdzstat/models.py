@@ -60,6 +60,13 @@ class UserLang(models.Model):
         return self.data
 
 
+class Browser(models.Model):
+    data = models.CharField(max_length=128, db_index=True)
+
+    def __str__(self):
+        return self.data
+
+
 class Host(models.Model):
     id = models.AutoField(primary_key=True)
     dt_create = models.DateTimeField(auto_now_add=True)
