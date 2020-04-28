@@ -28,7 +28,8 @@ class TimezoneHandler(AbstractHandler):
 
     def exec(self):
         tz = self._req.GET.get('tz_info')
-        if tz:
+        if tz and tz != 'undefined':
+            print(tz)
             tz_obj, created = models.Utc.objects.get_or_create(data=tz)
 
 
