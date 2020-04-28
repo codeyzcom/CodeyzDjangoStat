@@ -89,4 +89,4 @@ class UserLangAdmin(admin.ModelAdmin):
 
 @admin.register(models.Browser)
 class BrowserAdmin(admin.ModelAdmin):
-    list_display = ('data',)
+    list_display = ('data', 'version')

@@ -29,7 +29,6 @@ class TimezoneHandler(AbstractHandler):
     def exec(self):
         tz = self._req.GET.get('tz_info')
         if tz and tz != 'undefined':
-            print(tz)
             tz_obj, created = models.Utc.objects.get_or_create(data=tz)
 
 
@@ -74,4 +73,8 @@ class BrowserHandler(AbstractHandler):
     def exec(self):
         browser = self._req.GET.get('browser')
         if browser:
-            browser_obj = models.Browser.objects.get_or_create(data=browser)
+            name, version = browser.split(' ')
+            browser_obj = models.Browser.objects.get_or_create(
+                data=name,
+                version=version
+            )

@@ -62,6 +62,7 @@ class UserLang(models.Model):
 
 class Browser(models.Model):
     data = models.CharField(max_length=128, db_index=True)
+    version = models.CharField(max_length=32)
 
     def __str__(self):
         return self.data
