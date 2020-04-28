@@ -115,6 +115,11 @@ class HeightLevelService:
         self._req = request
 
     def process(self):
-        params = self._req.GET
-        for k, v in params.items():
-            print(f'{k}: {v}')
+        hlist = list()
+        hlist.append(handlers.UserLanguageHandler(self._req))
+
+        hlist.sort(key=lambda x: x.priority)
+
+        for handler in hlist:
+            if handler.state:
+                handler.exec()
