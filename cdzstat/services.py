@@ -3,13 +3,9 @@ import time
 
 from .settings import CDZSTAT_IGNORE_BOTS
 
-from .models import (
-    ExceptionPath,
-    Request,
-    UserAgent,
-    IpAddress,
-    Host,
-    Path,
+from cdzstat import (
+    models,
+    handlers,
 )
 
 from .utils import get_ip
@@ -36,7 +32,7 @@ class ExceptionService:
 
         if not CDZSTAT_IGNORE_BOTS and not USER_AGENT_CACHE:
             USER_AGENT_CACHE.extend(
-                UserAgent.objects.filter(
+                models.UserAgent.objects.filter(
                     is_bot=True
                 ).order_by('data').values_list('data', flat=True)
             )
@@ -45,7 +41,7 @@ class ExceptionService:
             return True
 
         if not EXCEPTION_CACHE_REGEX:
-            result = ExceptionPath.objects.filter(
+            result = models.ExceptionPath.objects.filter(
                 state=True,
                 except_type='regex',
                 host__host=host
@@ -61,7 +57,7 @@ class ExceptionService:
 
         if not EXCEPTION_CACHE_DIRECT:
             result = (
-                ExceptionPath.objects.filter(
+                models.ExceptionPath.objects.filter(
                     state=True,
                     except_type='match',
                     host__host=host
@@ -88,17 +84,22 @@ class LowLevelService:
         current_path = self._req.path
         status_code = self._resp.status_code
 
-        ip_addr_obj, created = IpAddress.objects.get_or_create(ip=ip_address)
-        user_agent_obj, created = UserAgent.objects.get_or_create(
+        ip_addr_obj, created = models.IpAddress.objects.get_or_create(
+            ip=ip_address
+        )
+        user_agent_obj, created = models.UserAgent.objects.get_or_create(
             data=user_agent
         )
-        host_obj, created = Host.objects.get_or_create(host=current_host)
-
-        path_obj, created = Path.objects.get_or_create(path=current_path)
+        host_obj, created = models.Host.objects.get_or_create(
+            host=current_host
+        )
+        path_obj, created = models.Path.objects.get_or_create(
+            path=current_path
+        )
         path_obj.host.add(host_obj.id)
         path_obj.save()
 
-        Request.objects.create(
+        models.Request.objects.create(
             ip=ip_addr_obj,
             ua=user_agent_obj,
             host=host_obj,
