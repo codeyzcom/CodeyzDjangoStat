@@ -64,12 +64,12 @@ class UtcAdmin(admin.ModelAdmin):
 
 @admin.register(models.ScreenSize)
 class ScreenSizeAdmin(admin.ModelAdmin):
-    list_display = ('height', 'width')
+    list_display = ('id', 'height', 'width')
 
 
 @admin.register(models.WindowSize)
 class WindowSizeAdmin(admin.ModelAdmin):
-    list_display = ('height', 'width')
+    list_display = ('id', 'height', 'width')
 
 
 @admin.register(models.ColorParam)
@@ -84,4 +84,9 @@ class PlatformAdmin(admin.ModelAdmin):
 
 @admin.register(models.UserLang)
 class UserLangAdmin(admin.ModelAdmin):
+    list_display = ('data',)
+
+
+@admin.register(models.Browser)
+class BrowserAdmin(admin.ModelAdmin):
     list_display = ('data',)
