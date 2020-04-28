@@ -117,6 +117,11 @@ class HeightLevelService:
     def process(self):
         hlist = list()
         hlist.append(handlers.UserLanguageHandler(self._req))
+        hlist.append(handlers.TimezoneHandler(self._req))
+        hlist.append(handlers.ScreenSizeHandler(self._req))
+        hlist.append(handlers.WindowSizeHandler(self._req))
+        hlist.append(handlers.ColorParamHandler(self._req))
+        hlist.append(handlers.BrowserHandler(self._req))
 
         hlist.sort(key=lambda x: x.priority)
 
