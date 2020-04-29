@@ -21,7 +21,7 @@ class UserLanguageHandler(AbstractHandler):
     def exec(self):
         lang = self._req.GET.get('user_lang')
         if lang:
-            lang_obj, created = models.UserLang.objects.get_or_create(data=lang)
+            models.UserLang.objects.get_or_create(data=lang)
 
 
 class TimezoneHandler(AbstractHandler):
@@ -29,7 +29,7 @@ class TimezoneHandler(AbstractHandler):
     def exec(self):
         tz = self._req.GET.get('tz_info')
         if tz and tz != 'undefined':
-            tz_obj, created = models.Utc.objects.get_or_create(data=tz)
+            models.Utc.objects.get_or_create(data=tz)
 
 
 class ScreenSizeHandler(AbstractHandler):
@@ -38,10 +38,7 @@ class ScreenSizeHandler(AbstractHandler):
         height = self._req.GET.get('screen_height')
         width = self._req.GET.get('screen_width')
         if height and width:
-            size_obj, created = models.ScreenSize.objects.get_or_create(
-                height=height,
-                width=width
-            )
+            models.ScreenSize.objects.get_or_create(height=height, width=width)
 
 
 class WindowSizeHandler(AbstractHandler):
@@ -50,10 +47,7 @@ class WindowSizeHandler(AbstractHandler):
         height = self._req.GET.get('window_height')
         width = self._req.GET.get('window_width')
         if height and width:
-            size_obj, created = models.WindowSize.objects.get_or_create(
-                height=height,
-                width=width
-            )
+            models.WindowSize.objects.get_or_create(height=height, width=width)
 
 
 class ColorParamHandler(AbstractHandler):
@@ -62,7 +56,7 @@ class ColorParamHandler(AbstractHandler):
         color = self._req.GET.get('screen_color_depth')
         pixel = self._req.GET.get('screen_pixel_depth')
         if color and pixel:
-            color_obj, created = models.ColorParam.objects.get_or_create(
+            models.ColorParam.objects.get_or_create(
                 color_depth=color,
                 pixel_depth=pixel
             )
@@ -74,7 +68,7 @@ class BrowserHandler(AbstractHandler):
         browser = self._req.GET.get('browser')
         if browser:
             name, version = browser.split(' ')
-            browser_obj = models.Browser.objects.get_or_create(
+            models.Browser.objects.get_or_create(
                 data=name,
                 version=version
             )
