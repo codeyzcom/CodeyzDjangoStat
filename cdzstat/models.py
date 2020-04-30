@@ -69,7 +69,7 @@ class Browser(models.Model):
     version = models.CharField(max_length=32)
 
     def __str__(self):
-        return self.data
+        return f'{self.data} {self.version}'
 
 
 class Host(models.Model):

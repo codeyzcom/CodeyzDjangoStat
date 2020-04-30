@@ -94,7 +94,18 @@ class BrowserAdmin(admin.ModelAdmin):
 
 @admin.register(models.UserParam)
 class UserParamAdmin(admin.ModelAdmin):
-    list_display = ('id', 'browser', 'time_zone', 'user_lang')
+    list_display = ('id', 'dt_create', 'browser', 'time_zone', 'user_lang')
+    readonly_fields = (
+        'id',
+        'dt_create',
+        'user_lang',
+        'time_zone',
+        'screen_size',
+        'window_size',
+        'color_param',
+        'browser',
+        'system_info',
+    )
 
 
 @admin.register(models.SystemInfo)
