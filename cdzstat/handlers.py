@@ -88,3 +88,16 @@ class BrowserHandler(AbstractHandler):
                 version=version
             )
             self.ctx['browser'] = obj
+
+
+class SystemInfoHandler(AbstractHandler):
+
+    def exec(self):
+        platform = self._req.GET.get('platform')
+        os_version = self._req.GET.get('os_version')
+        if platform or os_version:
+            obj, created = models.SystemInfo.objects.get_or_create(
+                platform=platform,
+                os_version=os_version
+            )
+            self.ctx['system_info'] = obj

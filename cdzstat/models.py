@@ -104,6 +104,9 @@ class SystemInfo(models.Model):
     os_version = models.CharField(max_length=64, null=True, blank=True)
     platform = models.CharField(max_length=64, null=True, blank=True)
 
+    def __str__(self):
+        return f'OS: {self.os_version}, PLATF: {self.platform}'
+
 
 class Path(models.Model):
     id = models.BigAutoField(primary_key=True)

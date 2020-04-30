@@ -122,6 +122,7 @@ class HeightLevelService:
         hlist.append(handlers.WindowSizeHandler)
         hlist.append(handlers.ColorParamHandler)
         hlist.append(handlers.BrowserHandler)
+        hlist.append(handlers.SystemInfoHandler)
 
         hlist.sort(key=lambda x: x.priority)
 
