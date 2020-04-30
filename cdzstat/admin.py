@@ -100,13 +100,3 @@ class UserParamAdmin(admin.ModelAdmin):
 @admin.register(models.SystemInfo)
 class SystemInfoAdmin(admin.ModelAdmin):
     list_display = ('id', 'platform', 'os_version')
-
-
-@admin.register(models.UserParam)
-class UserParamAdmin(admin.ModelAdmin):
-    list_display = ('id', 'browser', 'time_zone', 'user_lang')
-
-
-@admin.register(models.SystemInfo)
-class SystemInfoAdmin(admin.ModelAdmin):
-    list_display = ('id', 'platform', 'os_version')
