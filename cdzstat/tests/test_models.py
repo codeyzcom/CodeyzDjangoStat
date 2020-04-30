@@ -116,3 +116,12 @@ class ExceptionPathTest(TestCase):
 
     def test_str(self):
         self.assertEqual(str(self.exc), 'https://codeyz.com/cdzstat/')
+
+
+class BrowserTest(TestCase):
+
+    def setUp(self) -> None:
+        self.browser = models.Browser.objects.create(data='Opera', version='1')
+
+    def test_str(self):
+        self.assertEqual(str(self.browser), 'Opera')
