@@ -95,6 +95,12 @@ class UserAgent(models.Model):
         return self.data[:50]
 
 
+class SystemInfo(models.Model):
+    dt_create = models.DateTimeField(auto_now_add=True)
+    os_version = models.CharField(max_length=64)
+    platform = models.CharField(max_length=64)
+
+
 class Path(models.Model):
     id = models.BigAutoField(primary_key=True)
     dt_create = models.DateTimeField(auto_now_add=True)
