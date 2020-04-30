@@ -50,16 +50,16 @@ class ExceptionPathAdmin(admin.ModelAdmin):
     list_display = ('id', 'host', 'path', 'state')
 
 
-@admin.register(models.TimeZone)
-class TimeZoneAdmin(admin.ModelAdmin):
+@admin.register(models.TimeZoneInfo)
+class TimeZoneInfoAdmin(admin.ModelAdmin):
     list_display = ('name', 'offset', 'abbr', 'isdst')
     list_filter = ('isdst', 'offset')
     search_fields = ('name',)
 
 
-@admin.register(models.Utc)
-class UtcAdmin(admin.ModelAdmin):
-    list_display = ('data', 'time_zone')
+@admin.register(models.TimeZone)
+class TimeZoneAdmin(admin.ModelAdmin):
+    list_display = ('data', 'tz_info')
 
 
 @admin.register(models.ScreenSize)
@@ -90,3 +90,8 @@ class UserLangAdmin(admin.ModelAdmin):
 @admin.register(models.Browser)
 class BrowserAdmin(admin.ModelAdmin):
     list_display = ('id', 'data', 'version')
+
+
+@admin.register(models.UserParam)
+class UserParamAdmin(admin.ModelAdmin):
+    list_display = ('id', 'browser', 'time_zone', 'user_lang')
