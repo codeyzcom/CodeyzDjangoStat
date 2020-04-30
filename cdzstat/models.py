@@ -3,7 +3,7 @@ from django.db import models
 from . import EXCEPTION_TYPE
 
 
-class TimeZone(models.Model):
+class TimeZoneInfo(models.Model):
     name = models.CharField(max_length=64)
     abbr = models.CharField(max_length=8, verbose_name='abbreviation')
     offset = models.FloatField()
@@ -14,8 +14,12 @@ class TimeZone(models.Model):
         return self.name
 
 
-class Utc(models.Model):
-    time_zone = models.ForeignKey('TimeZone', on_delete=models.CASCADE)
+class TimeZone(models.Model):
+    tz_info = models.ForeignKey(
+        'TimeZoneInfo',
+        on_delete=models.CASCADE,
+        null=True
+    )
     data = models.CharField(max_length=32)
 
     def __str__(self):
