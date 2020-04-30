@@ -116,15 +116,19 @@ class HeightLevelService:
 
     def process(self):
         hlist = list()
-        hlist.append(handlers.UserLanguageHandler(self._req))
-        hlist.append(handlers.TimezoneHandler(self._req))
-        hlist.append(handlers.ScreenSizeHandler(self._req))
-        hlist.append(handlers.WindowSizeHandler(self._req))
-        hlist.append(handlers.ColorParamHandler(self._req))
-        hlist.append(handlers.BrowserHandler(self._req))
+        hlist.append(handlers.UserLanguageHandler)
+        hlist.append(handlers.TimezoneHandler)
+        hlist.append(handlers.ScreenSizeHandler)
+        hlist.append(handlers.WindowSizeHandler)
+        hlist.append(handlers.ColorParamHandler)
+        hlist.append(handlers.BrowserHandler)
 
         hlist.sort(key=lambda x: x.priority)
 
         for handler in hlist:
             if handler.state:
-                handler.exec()
+                handler(self._req).exec()
+
+        models.UserParam.objects.create(
+            **handlers.AbstractHandler(self._req).get_ctx()
+        )

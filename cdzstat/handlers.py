@@ -15,13 +15,20 @@ class AbstractHandler:
     def exec(self):
         pass
 
+    def get_ctx(self):
+        return self.ctx
+
 
 class UserLanguageHandler(AbstractHandler):
+
+    def __init__(self, request):
+        super().__init__(request)
 
     def exec(self):
         lang = self._req.GET.get('user_lang')
         if lang:
-            models.UserLang.objects.get_or_create(data=lang)
+            obj, created = models.UserLang.objects.get_or_create(data=lang)
+            self.ctx['user_lang'] = obj
 
 
 class TimezoneHandler(AbstractHandler):
@@ -29,7 +36,8 @@ class TimezoneHandler(AbstractHandler):
     def exec(self):
         tz = self._req.GET.get('tz_info')
         if tz and tz != 'undefined':
-            models.Utc.objects.get_or_create(data=tz)
+            obj, created = models.TimeZone.objects.get_or_create(data=tz)
+            self.ctx['time_zone'] = obj
 
 
 class ScreenSizeHandler(AbstractHandler):
@@ -38,7 +46,10 @@ class ScreenSizeHandler(AbstractHandler):
         height = self._req.GET.get('screen_height')
         width = self._req.GET.get('screen_width')
         if height and width:
-            models.ScreenSize.objects.get_or_create(height=height, width=width)
+            obj, created = models.ScreenSize.objects.get_or_create(
+                height=height, width=width
+            )
+            self.ctx['screen_size'] = obj
 
 
 class WindowSizeHandler(AbstractHandler):
@@ -47,7 +58,10 @@ class WindowSizeHandler(AbstractHandler):
         height = self._req.GET.get('window_height')
         width = self._req.GET.get('window_width')
         if height and width:
-            models.WindowSize.objects.get_or_create(height=height, width=width)
+            obj, created = models.WindowSize.objects.get_or_create(
+                height=height, width=width
+            )
+            self.ctx['window_size'] = obj
 
 
 class ColorParamHandler(AbstractHandler):
@@ -56,10 +70,11 @@ class ColorParamHandler(AbstractHandler):
         color = self._req.GET.get('screen_color_depth')
         pixel = self._req.GET.get('screen_pixel_depth')
         if color and pixel:
-            models.ColorParam.objects.get_or_create(
+            obj, created = models.ColorParam.objects.get_or_create(
                 color_depth=color,
                 pixel_depth=pixel
             )
+            self.ctx['color_param'] = obj
 
 
 class BrowserHandler(AbstractHandler):
@@ -68,7 +83,8 @@ class BrowserHandler(AbstractHandler):
         browser = self._req.GET.get('browser')
         if browser:
             name, version = browser.split(' ')
-            models.Browser.objects.get_or_create(
+            obj, created = models.Browser.objects.get_or_create(
                 data=name,
                 version=version
             )
+            self.ctx['browser'] = obj
