@@ -101,8 +101,8 @@ class UserAgent(models.Model):
 
 class SystemInfo(models.Model):
     dt_create = models.DateTimeField(auto_now_add=True)
-    os_version = models.CharField(max_length=64)
-    platform = models.CharField(max_length=64)
+    os_version = models.CharField(max_length=64, null=True, blank=True)
+    platform = models.CharField(max_length=64, null=True, blank=True)
 
 
 class Path(models.Model):
