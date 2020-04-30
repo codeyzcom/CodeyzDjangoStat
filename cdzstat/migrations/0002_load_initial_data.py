@@ -12,20 +12,20 @@ def unload_fixture_user_agent(apps, scheme_editor):
 
 
 def load_fixture_timezone(apps, scheme_editor):
-    call_command('loaddata', 'TimeZoneFixture', app_label='cdzstat')
+    call_command('loaddata', 'TimeZoneInfoFixture', app_label='cdzstat')
 
 
 def unload_fixture_timezone(apps, scheme_editor):
-    TimeZone = apps.get_model('cdzstat', 'TimeZone')
+    TimeZone = apps.get_model('cdzstat', 'TimeZoneInfo')
     TimeZone.objects.all().delete()
 
 
 def load_fixture_utc(apps, scheme_editor):
-    call_command('loaddata', 'UtcFixture', app_label='cdzstat')
+    call_command('loaddata', 'TimeZoneFixture', app_label='cdzstat')
 
 
 def unload_fixture_utc(apps, scheme_editor):
-    Utc = apps.get_model('cdzstat', 'Utc')
+    Utc = apps.get_model('cdzstat', 'TimeZone')
     Utc.objects.all().delete()
 
 
