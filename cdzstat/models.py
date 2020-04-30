@@ -169,3 +169,54 @@ class Request(models.Model):
     )
     status_code = models.IntegerField()
     response_time = models.FloatField()
+
+
+class UserParam(models.Model):
+    id = models.BigAutoField(
+        primary_key=True
+    )
+    dt_create = models.DateTimeField(
+        auto_now_add=True
+    )
+    user_lang = models.ForeignKey(
+        'UserLang',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
+    )
+    time_zone = models.ForeignKey(
+        'TimeZone',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
+    )
+    screen_size = models.ForeignKey(
+        'ScreenSize',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
+    )
+    window_size = models.ForeignKey(
+        'WindowSize',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
+    )
+    color_param = models.ForeignKey(
+        'ColorParam',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
+    )
+    browser = models.ForeignKey(
+        'Browser',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
+    )
+    system_info = models.ForeignKey(
+        'SystemInfo',
+        on_delete=models.CASCADE,
+        null=True,
+        blank=True
+    )
