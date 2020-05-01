@@ -77,11 +77,6 @@ class ColorParamAdmin(admin.ModelAdmin):
     list_display = ('id', 'color_depth', 'pixel_depth')
 
 
-@admin.register(models.Platform)
-class PlatformAdmin(admin.ModelAdmin):
-    list_display = ('data',)
-
-
 @admin.register(models.UserLang)
 class UserLangAdmin(admin.ModelAdmin):
     list_display = ('data',)

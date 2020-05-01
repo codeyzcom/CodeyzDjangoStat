@@ -50,13 +50,6 @@ class ColorParam(models.Model):
         return f'Color: {self.color_depth}, Pixel: {self.pixel_depth}'
 
 
-class Platform(models.Model):
-    data = models.CharField(max_length=32)
-
-    def __str__(self):
-        return self.data
-
-
 class UserLang(models.Model):
     data = models.CharField(max_length=8)
 
