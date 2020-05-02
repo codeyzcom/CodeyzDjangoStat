@@ -1,4 +1,4 @@
-const serverAddress = 'http://127.0.0.1:8000/'
+const serverAddress = 'http://192.168.1.123:8001/'
 
 function getOsVersion() {
     let nAgt = navigator.userAgent;
@@ -73,9 +73,10 @@ function measure_speed() {
     let processing = domComplete - domLoading;
     let loadingTime = responseEnd - responseStart;
 
-    console.log('DOM ', processing)
-    console.log('DUR ', loadingTime)
-
+    return {
+        'processing': processing,
+        'loadingTime': loadingTime
+    }
 }
 
 let data = {};
@@ -94,7 +95,7 @@ data['os_version'] = getOsVersion();
 data['browser'] = getBrowser();
 
 
-function sendData(data) {
+function sendDataGet(data) {
     const XHR = new XMLHttpRequest();
 
     let urlEncodedData = "",
@@ -111,21 +112,21 @@ function sendData(data) {
     console.log(urlEncodedData)
 }
 
-function sendPost(data) {
+function sendDataPost(data) {
+    console.log(JSON.stringify({value: data}));
     let xhr = new XMLHttpRequest();
     xhr.open("POST", serverAddress + 'cdzstat/collect_statistic', true);
     xhr.setRequestHeader('Content-Type', 'application/json');
-    xhr.send(JSON.stringify({
-        value: data
-    }));
+    xhr.send(JSON.stringify(data));
 }
 
 (function () {
-    sendData(data);
+    sendDataGet(data);
 })();
 
 
 window.onload = function () {
-
+    let speed = {'speed': measure_speed()}
+    sendDataPost(speed)
 }
 
