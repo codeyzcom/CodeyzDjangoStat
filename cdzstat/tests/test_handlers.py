@@ -52,7 +52,7 @@ class TimezoneHandlerTest(TestCase):
     def test_exec(self):
         tz_hnd = handlers.TimezoneHandler(request=self.req)
         result = tz_hnd.exec()
-        tz_obj = models.Utc.objects.get(data='America/Phoenix')
+        tz_obj = models.TimeZone.objects.get(data='America/Phoenix')
         self.assertEqual(tz_obj.data, 'America/Phoenix')
         self.assertIsNone(result)
 

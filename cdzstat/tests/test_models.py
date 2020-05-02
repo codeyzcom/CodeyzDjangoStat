@@ -3,22 +3,22 @@ from django.test import TestCase
 from cdzstat import models
 
 
-class TimeZoneTest(TestCase):
+class TimezoneInfoTest(TestCase):
 
     def setUp(self) -> None:
-        self.tz = models.TimeZone.objects.filter(name__exact='UTC').first()
+        self.tzi = models.TimeZoneInfo.objects.filter(name__exact='UTC').first()
 
     def test_str(self):
-        self.assertEqual(str(self.tz), 'UTC')
+        self.assertEqual(str(self.tzi), 'UTC')
 
 
-class UtcTest(TestCase):
+class TimezoneTest(TestCase):
 
     def setUp(self) -> None:
-        self.utc = models.Utc.objects.filter(data='Europe/London').first()
+        self.tz = models.TimeZone.objects.filter(data='Europe/London').first()
 
     def test_str(self):
-        self.assertEqual(str(self.utc), 'Europe/London')
+        self.assertEqual(str(self.tz), 'Europe/London')
 
 
 class ScreenSizeTest(TestCase):
@@ -48,15 +48,6 @@ class ColorParamTest(TestCase):
 
     def test_str(self):
         self.assertEqual(str(self.color), 'Color: 24, Pixel: 24')
-
-
-class PlatformTest(TestCase):
-
-    def setUp(self) -> None:
-        self.platform = models.Platform.objects.create(data='Linux')
-
-    def test_str(self):
-        self.assertEqual(str(self.platform), 'Linux')
 
 
 class UserLangTest(TestCase):
@@ -124,4 +115,4 @@ class BrowserTest(TestCase):
         self.browser = models.Browser.objects.create(data='Opera', version='1')
 
     def test_str(self):
-        self.assertEqual(str(self.browser), 'Opera')
+        self.assertEqual(str(self.browser), 'Opera 1')
