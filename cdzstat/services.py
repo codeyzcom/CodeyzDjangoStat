@@ -133,3 +133,12 @@ class HeightLevelService:
         models.UserParam.objects.create(
             **handlers.AbstractHandler(self._req).get_ctx()
         )
+
+
+class StatisticalService:
+
+    def __init__(self, request):
+        self._req = request
+
+    def process(self):
+        pass
