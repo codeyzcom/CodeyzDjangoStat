@@ -60,6 +60,22 @@ function getBrowser() {
 }
 
 
+function measure_speed() {
+
+    let t = window.performance.timing;
+    let domLoading = t.domLoading;
+    let domComplete = t.domComplete;
+    let responseStart = t.responseStart;
+    let responseEnd = t.responseEnd;
+
+    let processing = domComplete - domLoading;
+    let loadingTime = responseEnd - responseStart;
+
+    console.log('DOM ', processing)
+    console.log('DUR ', loadingTime)
+
+}
+
 let data = {};
 data['screen_height'] = screen.height;
 data['screen_width'] = screen.width;
@@ -93,7 +109,12 @@ function sendData(data) {
     console.log(urlEncodedData)
 }
 
-
 (function () {
     sendData(data);
 })();
+
+
+window.onload = function () {
+
+}
+
