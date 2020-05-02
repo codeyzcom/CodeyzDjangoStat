@@ -1,3 +1,5 @@
+const serverAddress = 'http://127.0.0.1:8000/'
+
 function getOsVersion() {
     let nAgt = navigator.userAgent;
     let os;
@@ -103,10 +105,19 @@ function sendData(data) {
         urlEncodedDataPairs.push(encodeURIComponent(name) + '=' + encodeURIComponent(data[name]))
     }
     urlEncodedData = urlEncodedDataPairs.join('&').replace(/%20/g, '+');
-    XHR.open('GET', 'http://127.0.0.1:8000/cdzstat/collect_statistic?' + urlEncodedData);
+    XHR.open('GET', serverAddress + 'cdzstat/collect_statistic?' + urlEncodedData);
     XHR.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     XHR.send();
     console.log(urlEncodedData)
+}
+
+function sendPost(data) {
+    let xhr = new XMLHttpRequest();
+    xhr.open("POST", serverAddress + 'cdzstat/collect_statistic', true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.send(JSON.stringify({
+        value: data
+    }));
 }
 
 (function () {
