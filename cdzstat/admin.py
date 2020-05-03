@@ -3,6 +3,27 @@ from django.contrib import admin
 from cdzstat import models
 
 
+class RequestsInline(admin.TabularInline):
+    model = models.Request
+    extra = 0
+    can_delete = False
+    readonly_fields = (
+        'id',
+        'key',
+        'dt_create',
+        'session',
+        'entry_point',
+        'host',
+        'path',
+        'referer',
+        'external_referer',
+        'status_code',
+        'response_time',
+        'processing_time',
+        'loading'
+    )
+
+
 @admin.register(models.Host)
 class HostAdmin(admin.ModelAdmin):
     list_display = ('id', 'host')
@@ -29,16 +50,23 @@ class UserAgentAdmin(admin.ModelAdmin):
 @admin.register(models.Request)
 class RequestAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'path', 'status_code', 'response_time', 'dt_create'
+        'id', 'path', 'status_code', 'response_time', 'dt_create', 'entry_point'
     )
     list_filter = ('status_code',)
     readonly_fields = (
         'id',
+        'key',
         'dt_create',
+        'session',
+        'entry_point',
         'host',
         'path',
+        'referer',
+        'external_referer',
         'status_code',
-        'response_time'
+        'response_time',
+        'processing_time',
+        'loading'
     )
 
 
@@ -93,3 +121,9 @@ class SystemInfoAdmin(admin.ModelAdmin):
 class SessionDataAdmin(admin.ModelAdmin):
     list_display = ('key', 'dt_create', 'expire_date')
     ordering = ('-dt_create',)
+    inlines = (RequestsInline,)
+
+
+@admin.register(models.ExternalReferer)
+class ExternalRefererAdmin(admin.ModelAdmin):
+    pass

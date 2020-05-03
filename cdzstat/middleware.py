@@ -20,7 +20,7 @@ class StatCollector:
         if not exc_srv.check():
             session = SessionService(request, response)
             session.process()
-            lls = LowLevelService(request, response)
+            lls = LowLevelService(request, response, session.data)
             lls.process()
         else:
             print(
