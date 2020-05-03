@@ -83,14 +83,19 @@ class SessionService:
     def process(self):
         session_key = self._req.COOKIES.get(CDZSTAT_SESSION_COOKIE_NAME)
         now = timezone.localtime()
-        expire_date = now + timedelta(minutes=15)
+        expire_date = now + timedelta(minutes=30)
 
         if session_key:
-            exist = models.SessionData.objects.filter(key=session_key).first()
+            exist = models.SessionData.objects.filter(
+                key=session_key,
+                expire_date__gt=now,
+            ).first()
             if exist:
                 models.SessionData.objects.filter(key=session_key).update(
                     expire_date=expire_date
                 )
+            else:
+                session_key = None
         if not session_key:
             s_obj = models.SessionData.objects.create(
                 expire_date=expire_date
