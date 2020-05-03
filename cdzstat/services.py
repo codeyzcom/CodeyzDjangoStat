@@ -143,8 +143,6 @@ class LowLevelService:
         path_obj.save()
 
         models.Request.objects.create(
-            ip=ip_addr_obj,
-            ua=user_agent_obj,
             host=host_obj,
             path=path_obj,
             status_code=status_code,
@@ -172,10 +170,6 @@ class HeightLevelService:
         for handler in hlist:
             if handler.state:
                 handler(self._req).exec()
-
-        models.UserParam.objects.create(
-            **handlers.AbstractHandler(self._req).get_ctx()
-        )
 
 
 class StatisticalService:

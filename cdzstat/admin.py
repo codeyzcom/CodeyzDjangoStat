@@ -29,15 +29,12 @@ class UserAgentAdmin(admin.ModelAdmin):
 @admin.register(models.Request)
 class RequestAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'path', 'ip', 'status_code', 'response_time', 'dt_create'
+        'id', 'path', 'status_code', 'response_time', 'dt_create'
     )
-    search_fields = ('ip__ip',)
     list_filter = ('status_code',)
     readonly_fields = (
         'id',
         'dt_create',
-        'ip',
-        'ua',
         'host',
         'path',
         'status_code',
@@ -85,22 +82,6 @@ class UserLangAdmin(admin.ModelAdmin):
 @admin.register(models.Browser)
 class BrowserAdmin(admin.ModelAdmin):
     list_display = ('id', 'data', 'version')
-
-
-@admin.register(models.UserParam)
-class UserParamAdmin(admin.ModelAdmin):
-    list_display = ('id', 'dt_create', 'browser', 'time_zone', 'user_lang')
-    readonly_fields = (
-        'id',
-        'dt_create',
-        'user_lang',
-        'time_zone',
-        'screen_size',
-        'window_size',
-        'color_param',
-        'browser',
-        'system_info',
-    )
 
 
 @admin.register(models.SystemInfo)

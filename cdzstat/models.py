@@ -2,7 +2,7 @@ import uuid
 
 from django.db import models
 
-from . import EXCEPTION_TYPE
+from . import EXCEPTION_TYPE, utils
 
 
 class TimeZoneInfo(models.Model):
@@ -113,20 +113,6 @@ class Path(models.Model):
         return self.path[:100]
 
 
-class SessionData(models.Model):
-    key = models.CharField(
-        primary_key=True,
-        max_length=36,
-        default=uuid.uuid4,
-        editable=False
-    )
-    dt_create = models.DateTimeField(auto_now_add=True)
-    expire_date = models.DateTimeField()
-
-    def __str__(self):
-        return self.key
-
-
 class ExceptionPath(models.Model):
     dt_create = models.DateTimeField(
         auto_now_add=True
@@ -154,13 +140,71 @@ class ExceptionPath(models.Model):
 
 
 class Request(models.Model):
+    class Meta:
+        unique_together = ('session', 'key')
+
     id = models.BigAutoField(
         primary_key=True
+    )
+    key = models.CharField(
+        max_length=10,
+        default=utils.rand_symbols
     )
     dt_create = models.DateTimeField(
         auto_now_add=True,
         verbose_name='Date and Time create entry'
     )
+    session = models.ForeignKey(
+        'SessionData',
+        on_delete=models.CASCADE,
+        null=True
+    )
+    entry_point = models.BooleanField(
+        default=False
+    )
+    host = models.ForeignKey(
+        'Host',
+        on_delete=models.CASCADE,
+        null=True
+    )
+    path = models.ForeignKey(
+        'Path',
+        on_delete=models.CASCADE,
+        null=True,
+    )
+    referer = models.ForeignKey(
+        'Path',
+        on_delete=models.DO_NOTHING,
+        null=True,
+        related_name='referer'
+    )
+    status_code = models.IntegerField()
+    response_time = models.FloatField()
+    processing_time = models.IntegerField(
+        null=True,
+        help_text='Measure in milliseconds. Start: domLoading End: domComplete'
+    )
+    loading = models.IntegerField(
+        null=True,
+        help_text='Measure in milliseconds. ' +
+                  'Start: responseStart, End: responseEnd'
+    )
+
+    def __str__(self):
+        return str(self.id)
+
+
+class SessionData(models.Model):
+    key = models.CharField(
+        primary_key=True,
+        max_length=36,
+        default=uuid.uuid4,
+        editable=False
+    )
+    dt_create = models.DateTimeField(
+        auto_now_add=True
+    )
+    expire_date = models.DateTimeField()
     ip = models.ForeignKey(
         'IpAddress',
         on_delete=models.CASCADE,
@@ -173,31 +217,7 @@ class Request(models.Model):
         null=True,
         verbose_name='User-Agent'
     )
-    host = models.ForeignKey(
-        'Host',
-        on_delete=models.CASCADE,
-        null=True
-    )
-    path = models.ForeignKey(
-        'Path',
-        on_delete=models.CASCADE,
-        null=True
-    )
-    status_code = models.IntegerField()
-    response_time = models.FloatField()
-
-    def __str__(self):
-        return str(self.id)
-
-
-class UserParam(models.Model):
-    id = models.BigAutoField(
-        primary_key=True
-    )
-    dt_create = models.DateTimeField(
-        auto_now_add=True
-    )
-    user_lang = models.ForeignKey(
+    browser_lang = models.ForeignKey(
         'UserLang',
         on_delete=models.CASCADE,
         null=True,
@@ -241,4 +261,4 @@ class UserParam(models.Model):
     )
 
     def __str__(self):
-        return str(self.id)
+        return self.key
