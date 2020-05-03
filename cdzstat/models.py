@@ -113,6 +113,15 @@ class Path(models.Model):
         return self.path[:100]
 
 
+class ExternalReferer(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    dt_create = models.DateTimeField(auto_now_add=True)
+    data = models.TextField(db_index=True)
+
+    def __str__(self):
+        return self.data[:100]
+
+
 class ExceptionPath(models.Model):
     dt_create = models.DateTimeField(
         auto_now_add=True
@@ -177,6 +186,11 @@ class Request(models.Model):
         on_delete=models.DO_NOTHING,
         null=True,
         related_name='referer'
+    )
+    external_referer = models.ForeignKey(
+        'ExternalReferer',
+        on_delete=models.DO_NOTHING,
+        null=True
     )
     status_code = models.IntegerField()
     response_time = models.FloatField()
