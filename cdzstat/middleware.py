@@ -3,6 +3,7 @@ import time
 from .services import (
     ExceptionService,
     LowLevelService,
+    SessionService,
 )
 
 
@@ -17,6 +18,8 @@ class StatCollector:
 
         exc_srv = ExceptionService(request)
         if not exc_srv.check():
+            session = SessionService(request, response)
+            session.process()
             lls = LowLevelService(request, response)
             lls.process()
         else:

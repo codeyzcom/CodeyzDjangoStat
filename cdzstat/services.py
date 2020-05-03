@@ -1,19 +1,23 @@
 import re
 import time
+from datetime import timedelta
 
-from .settings import CDZSTAT_IGNORE_BOTS
-
-from cdzstat import (
-    models,
-    handlers,
-)
-
-from .utils import get_ip
+from django.conf import settings
+from django.utils import timezone
 
 from . import (
     USER_AGENT_CACHE,
     EXCEPTION_CACHE_REGEX,
     EXCEPTION_CACHE_DIRECT,
+)
+from .settings import (
+    CDZSTAT_IGNORE_BOTS,
+    CDZSTAT_SESSION_COOKIE_NAME,
+)
+from cdzstat import (
+    models,
+    handlers,
+    utils,
 )
 
 
@@ -70,6 +74,40 @@ class ExceptionService:
             return True
 
 
+class SessionService:
+
+    def __init__(self, request, response):
+        self._req = request
+        self._resp = response
+
+    def process(self):
+        session_key = self._req.COOKIES.get(CDZSTAT_SESSION_COOKIE_NAME)
+        now = timezone.localtime()
+        expire_date = now + timedelta(minutes=15)
+
+        if session_key:
+            exist = models.SessionData.objects.filter(key=session_key).first()
+            if exist:
+                models.SessionData.objects.filter(key=session_key).update(
+                    expire_date=expire_date
+                )
+        if not session_key:
+            s_obj = models.SessionData.objects.create(
+                expire_date=expire_date
+            )
+            session_key = s_obj.key
+
+        self._resp.set_cookie(
+            CDZSTAT_SESSION_COOKIE_NAME,
+            session_key,
+            expires=expire_date,
+            path=settings.SESSION_COOKIE_PATH,
+            secure=settings.SESSION_COOKIE_SECURE or None,
+            httponly=settings.SESSION_COOKIE_HTTPONLY or None,
+            samesite=settings.SESSION_COOKIE_SAMESITE,
+        )
+
+
 class LowLevelService:
 
     def __init__(self, request, response):
@@ -78,7 +116,7 @@ class LowLevelService:
 
     def process(self):
         elapsed = time.time() - self._req.start_time
-        ip_address = get_ip(self._req)
+        ip_address = utils.get_ip(self._req)
         user_agent = self._req.META['HTTP_USER_AGENT']
         current_host = self._req.META.get('HTTP_HOST')
         current_path = self._req.path

@@ -1,3 +1,5 @@
+import uuid
+
 from django.db import models
 
 from . import EXCEPTION_TYPE
@@ -109,6 +111,17 @@ class Path(models.Model):
 
     def __str__(self):
         return self.path[:100]
+
+
+class SessionData(models.Model):
+    key = models.CharField(
+        primary_key=True,
+        max_length=36,
+        default=uuid.uuid4,
+        editable=False
+    )
+    dt_create = models.DateTimeField(auto_now_add=True)
+    expire_date = models.DateTimeField()
 
 
 class ExceptionPath(models.Model):

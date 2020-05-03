@@ -106,3 +106,8 @@ class UserParamAdmin(admin.ModelAdmin):
 @admin.register(models.SystemInfo)
 class SystemInfoAdmin(admin.ModelAdmin):
     list_display = ('id', 'platform', 'os_version')
+
+
+@admin.register(models.SessionData)
+class SessionDataAdmin(admin.ModelAdmin):
+    list_display = ('key', 'dt_create', 'expire_date')

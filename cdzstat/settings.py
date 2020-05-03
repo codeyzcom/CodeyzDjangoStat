@@ -6,3 +6,5 @@ def get(key, default):
 
 
 CDZSTAT_IGNORE_BOTS = get('CDZSTAT_IGNORE_BOTS', True)
+
+CDZSTAT_SESSION_COOKIE_NAME = get('CDZSTAT_SESSION_COOKIE_NAME', 'cdz_session')
