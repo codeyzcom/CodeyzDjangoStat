@@ -123,6 +123,9 @@ class SessionData(models.Model):
     dt_create = models.DateTimeField(auto_now_add=True)
     expire_date = models.DateTimeField()
 
+    def __str__(self):
+        return self.key
+
 
 class ExceptionPath(models.Model):
     dt_create = models.DateTimeField(
@@ -183,6 +186,9 @@ class Request(models.Model):
     status_code = models.IntegerField()
     response_time = models.FloatField()
 
+    def __str__(self):
+        return str(self.id)
+
 
 class UserParam(models.Model):
     id = models.BigAutoField(
@@ -233,3 +239,6 @@ class UserParam(models.Model):
         null=True,
         blank=True
     )
+
+    def __str__(self):
+        return str(self.id)

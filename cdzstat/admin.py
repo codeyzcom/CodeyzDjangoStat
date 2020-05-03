@@ -111,3 +111,4 @@ class SystemInfoAdmin(admin.ModelAdmin):
 @admin.register(models.SessionData)
 class SessionDataAdmin(admin.ModelAdmin):
     list_display = ('key', 'dt_create', 'expire_date')
+    ordering = ('-dt_create',)
