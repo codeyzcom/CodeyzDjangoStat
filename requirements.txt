@@ -1,5 +1,5 @@
 Django==3.0.5
-
+redis==3.5.0
 # Testing
 
 flake8==3.7.9
