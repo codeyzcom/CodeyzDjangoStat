@@ -1,3 +1,5 @@
+from redis import Redis
+
 default_app_config = 'cdzstat.apps.CdzstatConfig'
 
 EXCEPTION_TYPE = (
@@ -15,3 +17,5 @@ HTTP_STATUSES = (
 USER_AGENT_CACHE = []
 EXCEPTION_CACHE_REGEX = {}
 EXCEPTION_CACHE_DIRECT = {}
+
+RCONN = Redis()
