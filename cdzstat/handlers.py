@@ -1,6 +1,7 @@
 from abc import abstractmethod
 
-from cdzstat import models
+from . import REDIS_CONN
+from cdzstat import utils
 
 
 class AbstractHandler:
@@ -8,110 +9,46 @@ class AbstractHandler:
     state = True
     ctx = dict()
 
-    def __init__(self, request):
-        self._req = request
+    def __init__(self, full_data):
+        self._full_data = full_data
 
     @abstractmethod
-    def exec(self):
+    def process(self) -> None:
         pass
 
     def get_ctx(self):
         return self.ctx
 
 
-class UserLanguageHandler(AbstractHandler):
+class DataHandler(AbstractHandler):
 
-    def __init__(self, request):
-        super().__init__(request)
+    priority = 10
 
-    def exec(self):
-        lang = self._req.GET.get('user_lang')
-        if lang:
-            obj, created = models.UserLang.objects.get_or_create(data=lang)
-            self.ctx['user_lang'] = obj
+    def process(self) -> None:
+        data = self._full_data['data']
+        session_key = data['session_key']
 
+        is_anonymous = False
 
-class TimezoneHandler(AbstractHandler):
+        if session_key:
+            skey_obj = REDIS_CONN.hgetall(utils.get_session(session_key))
+            if not skey_obj:
+                is_anonymous = True
+        else:
+            is_anonymous = True
 
-    def exec(self):
-        tz = self._req.GET.get('tz_info')
-        if tz and tz != 'undefined':
-            obj, created = models.TimeZone.objects.get_or_create(data=tz)
-            self.ctx['time_zone'] = obj
-
-
-class ScreenSizeHandler(AbstractHandler):
-
-    def exec(self):
-        height = self._req.GET.get('screen_height')
-        width = self._req.GET.get('screen_width')
-        if height and width:
-            obj, created = models.ScreenSize.objects.get_or_create(
-                height=height, width=width
-            )
-            self.ctx['screen_size'] = obj
+        if not is_anonymous:
+            self.ctx['session_key'] = session_key
+        # ToDo anonymous session 
 
 
-class WindowSizeHandler(AbstractHandler):
+class ParamHandler(AbstractHandler):
 
-    def exec(self):
-        height = self._req.GET.get('window_height')
-        width = self._req.GET.get('window_width')
-        if height and width:
-            obj, created = models.WindowSize.objects.get_or_create(
-                height=height, width=width
-            )
-            self.ctx['window_size'] = obj
+    def process(self) -> None:
+        param = self._full_data['param']
+        session_key = self.ctx['session_key']
 
-
-class ColorParamHandler(AbstractHandler):
-
-    def exec(self):
-        color = self._req.GET.get('screen_color_depth')
-        pixel = self._req.GET.get('screen_pixel_depth')
-        if color and pixel:
-            obj, created = models.ColorParam.objects.get_or_create(
-                color_depth=color,
-                pixel_depth=pixel
-            )
-            self.ctx['color_param'] = obj
-
-
-class BrowserHandler(AbstractHandler):
-
-    def exec(self):
-        browser = self._req.GET.get('browser')
-        if browser:
-            name, version = browser.split(' ')
-            obj, created = models.Browser.objects.get_or_create(
-                data=name,
-                version=version
-            )
-            self.ctx['browser'] = obj
-
-
-class SystemInfoHandler(AbstractHandler):
-
-    def exec(self):
-        platform = self._req.GET.get('platform')
-        os_version = self._req.GET.get('os_version')
-        if platform or os_version:
-            obj, created = models.SystemInfo.objects.get_or_create(
-                platform=platform,
-                os_version=os_version
-            )
-            self.ctx['system_info'] = obj
-            self.ctx['browser'] = obj
-
-
-class SystemInfoHandler(AbstractHandler):
-
-    def exec(self):
-        platform = self._req.GET.get('platform')
-        os_version = self._req.GET.get('os_version')
-        if platform or os_version:
-            obj, created = models.SystemInfo.objects.get_or_create(
-                platform=platform,
-                os_version=os_version
-            )
-            self.ctx['system_info'] = obj
+        with REDIS_CONN.pipeline() as pipe:
+            for k, v in param.items():
+                pipe.hset(utils.get_session(session_key), k, v)
+            pipe.execute()
