@@ -86,42 +86,55 @@ class LowLevelService:
         self._resp = response
 
     def process(self) -> None:
-        data = self._collect_data()
+        session_key, data, navigate = self._collect_data()
 
+        session_key = session_key[0]
         new_session = False
 
-        if not data.get('session_key', False):
+        if not session_key:
             new_session = True
         else:
-            skey = RCONN.get(data['session_key'])
+            skey = RCONN.hgetall(utils.get_session(session_key))
             if not skey:
                 new_session = True
+            else:
+                RCONN.expire(
+                    utils.get_session(utils.get_session(session_key)),
+                    CDZSTAT_SESSION_COOKIE_AGE
+                )
 
         if new_session:
-            skey = str(uuid4())
-            data['session_key'] = skey
-            RCONN.set(skey, json.dumps(data))
-            RCONN.expire(skey, CDZSTAT_SESSION_COOKIE_AGE)
+            session_key = str(uuid4())
+            with RCONN.pipeline() as pipe:
+                for k, v in data.items():
+                    pipe.hset(utils.get_session(session_key), k, v)
+                pipe.execute()
+            RCONN.expire(utils.get_session(session_key), CDZSTAT_SESSION_COOKIE_AGE)
+
+        RCONN.rpush(utils.get_navigation(session_key), json.dumps(navigate))
 
         self._resp.set_cookie(
             CDZSTAT_SESSION_COOKIE_NAME,
-            data['session_key'],
+            session_key,
             expires=CDZSTAT_SESSION_COOKIE_AGE,
             path=settings.SESSION_COOKIE_PATH,
             secure=settings.SESSION_COOKIE_SECURE or None,
             samesite=settings.SESSION_COOKIE_SAMESITE,
         )
 
-    def _collect_data(self) -> dict:
-        return {
-            'session_key': self._req.COOKIES.get(CDZSTAT_SESSION_COOKIE_NAME),
+    def _collect_data(self) -> (str, dict, dict):
+        session = self._req.COOKIES.get(CDZSTAT_SESSION_COOKIE_NAME),
+        data = {
             'ip_address': utils.get_ip(self._req),
             'user_agent': self._req.META['HTTP_USER_AGENT'],
-            'host': self._req.META.get('HTTP_HOST'),
-            'path': self._req.path,
-            'referer': self._req.META.get('HTTP_REFERER'),
             'status_code': self._resp.status_code
         }
+        navigate = {
+            'host': self._req.META.get('HTTP_HOST'),
+            'path': self._req.path,
+            'referer': self._req.META.get('HTTP_REFERER') or '',
+        }
+        return session, data, navigate
 
 
 class HeightLevelService:
