@@ -17,3 +17,11 @@ def rand_symbols(length: int = 10):
             string.ascii_lowercase + string.digits
         ) for _ in range(length)
     )
+
+
+def get_session(key):
+    return f'session:{key}'
+
+
+def get_navigation(key):
+    return f'navigation:{key}'
