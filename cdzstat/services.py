@@ -12,7 +12,7 @@ from . import (
     USER_AGENT_CACHE,
     EXCEPTION_CACHE_REGEX,
     EXCEPTION_CACHE_DIRECT,
-    RCONN,
+    REDIS_CONN,
 )
 from .settings import (
     CDZSTAT_IGNORE_BOTS,
@@ -94,24 +94,24 @@ class LowLevelService:
         if not session_key:
             new_session = True
         else:
-            skey = RCONN.hgetall(utils.get_session(session_key))
+            skey = REDIS_CONN.hgetall(utils.get_session(session_key))
             if not skey:
                 new_session = True
             else:
-                RCONN.expire(
+                REDIS_CONN.expire(
                     utils.get_session(utils.get_session(session_key)),
                     CDZSTAT_SESSION_COOKIE_AGE
                 )
 
         if new_session:
             session_key = str(uuid4())
-            with RCONN.pipeline() as pipe:
+            with REDIS_CONN.pipeline() as pipe:
                 for k, v in data.items():
                     pipe.hset(utils.get_session(session_key), k, v)
                 pipe.execute()
-            RCONN.expire(utils.get_session(session_key), CDZSTAT_SESSION_COOKIE_AGE)
+            REDIS_CONN.expire(utils.get_session(session_key), CDZSTAT_SESSION_COOKIE_AGE)
 
-        RCONN.rpush(utils.get_navigation(session_key), json.dumps(navigate))
+        REDIS_CONN.rpush(utils.get_navigation(session_key), json.dumps(navigate))
 
         self._resp.set_cookie(
             CDZSTAT_SESSION_COOKIE_NAME,
@@ -143,27 +143,14 @@ class HeightLevelService:
         self._req = request
 
     def process(self):
+        full_data = json.loads(self._req.body.decode())
+
         hlist = list()
-        hlist.append(handlers.UserLanguageHandler)
-        hlist.append(handlers.TimezoneHandler)
-        hlist.append(handlers.ScreenSizeHandler)
-        hlist.append(handlers.WindowSizeHandler)
-        hlist.append(handlers.ColorParamHandler)
-        hlist.append(handlers.BrowserHandler)
-        hlist.append(handlers.SystemInfoHandler)
+        hlist.append(handlers.DataHandler)
+        hlist.append(handlers.ParamHandler)
 
         hlist.sort(key=lambda x: x.priority)
 
         for handler in hlist:
             if handler.state:
-                handler(self._req).exec()
-
-
-class StatisticalService:
-
-    def __init__(self, request):
-        self._req = request
-
-    def process(self):
-        for k, v in json.loads(self._req.body).items():
-            print(k, v)
+                handler(full_data).process()
