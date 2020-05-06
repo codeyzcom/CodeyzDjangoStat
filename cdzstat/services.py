@@ -79,6 +79,45 @@ class ExceptionService:
             return True
 
 
+class NavigateService:
+
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def add_node(session: str, path: str, entry_point: bool = True):
+        REDIS_CONN.hset(
+            utils.get_node(session),
+            path,
+            json.dumps({
+                'counter': 0,
+                'entry_point': str(entry_point)
+            })
+        )
+
+    @staticmethod
+    def inc_node(session: str, path: str):
+        data = REDIS_CONN.hget(utils.get_node(session), path)
+        data = json.loads(data)
+        data['counter'] += 1
+        REDIS_CONN.hset(utils.get_node(session), path, json.dumps(data))
+
+    @staticmethod
+    def check_node(session: str, path):
+        return REDIS_CONN.hexists(utils.get_node(session), path)
+
+    @staticmethod
+    def add_edge(session: str, from_node: str, to_node: str):
+        REDIS_CONN.rpush(
+            utils.get_edge(session),
+            json.dumps({'from': from_node, 'to': to_node})
+        )
+
+    @staticmethod
+    def add_adjacency(session: str, node: str, edges: list):
+        REDIS_CONN.hset(utils.get_adjacency(session), node, edges)
+
+
 class LowLevelService:
 
     def __init__(self, request, response) -> None:
@@ -90,6 +129,10 @@ class LowLevelService:
 
         session_key = session_key[0]
         new_session = False
+
+        current_path = navigate.get('path')
+        # Todo split referer on host and path
+        current_referer = navigate.get('referer')
 
         if not session_key:
             new_session = True
@@ -109,9 +152,18 @@ class LowLevelService:
                 for k, v in data.items():
                     pipe.hset(utils.get_session(session_key), k, v)
                 pipe.execute()
-            REDIS_CONN.expire(utils.get_session(session_key), CDZSTAT_SESSION_COOKIE_AGE)
+            REDIS_CONN.expire(
+                utils.get_session(session_key),
+                CDZSTAT_SESSION_COOKIE_AGE
+            )
 
-        REDIS_CONN.rpush(utils.get_navigation(session_key), json.dumps(navigate))
+        if NavigateService.check_node(session_key, current_path):
+            NavigateService.inc_node(session_key, current_path)
+        else:
+            # ToDo check entry_point
+            NavigateService.add_node(session_key, current_path, False)
+
+        NavigateService.add_edge(session_key, current_referer, current_path)
 
         self._resp.set_cookie(
             CDZSTAT_SESSION_COOKIE_NAME,
