@@ -25,3 +25,15 @@ def get_session(key):
 
 def get_navigation(key):
     return f'navigation:{key}'
+
+
+def get_node(key):
+    return f'node:{key}'
+
+
+def get_edge(key):
+    return f'edge:{key}'
+
+
+def get_adjacency(key):
+    return f'adjacency:{key}'
