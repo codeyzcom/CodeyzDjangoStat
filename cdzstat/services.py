@@ -14,10 +14,10 @@ from .settings import (
     CDZSTAT_IGNORE_BOTS,
     CDZSTAT_SESSION_COOKIE_NAME,
     CDZSTAT_SESSION_AGE,
+    CDZSTAT_REQUEST_NUM_NAME,
 )
 from cdzstat import (
     models,
-    handlers,
     utils,
 )
 
@@ -94,6 +94,10 @@ class StoreService:
             utils.get_edge(session),
             json.dumps({'from': from_node, 'to': to_node})
         )
+
+    @staticmethod
+    def update_edge(session: str, index: int, data: dict) -> None:
+        REDIS_CONN.lset(utils.get_edge(session), index, json.dumps(data))
 
     @staticmethod
     def get_edge(session: str, index: int) -> dict:
@@ -248,6 +252,15 @@ class LowLevelService:
         StoreService.add_adjacency(session_key, current_path, edge)
 
         self._resp.set_cookie(
+            CDZSTAT_REQUEST_NUM_NAME,
+            edge,
+            expires=CDZSTAT_SESSION_AGE,
+            path=settings.SESSION_COOKIE_PATH,
+            secure=settings.SESSION_COOKIE_SECURE or None,
+            samesite=settings.SESSION_COOKIE_SAMESITE,
+        )
+
+        self._resp.set_cookie(
             CDZSTAT_SESSION_COOKIE_NAME,
             session_key,
             expires=CDZSTAT_SESSION_AGE,
@@ -279,12 +292,21 @@ class HeightLevelService:
     def process(self):
         full_data = json.loads(self._req.body.decode())
 
-        hlist = list()
-        hlist.append(handlers.DataHandler)
-        hlist.append(handlers.ParamHandler)
+        data = full_data.get('data')
+        param = full_data.get('param')
+        speed = full_data.get('speed')
 
-        hlist.sort(key=lambda x: x.priority)
+        session_key = data.get('session_key')
+        request_inc = data.get('request_inc')
 
-        for handler in hlist:
-            if handler.state:
-                handler(full_data).process()
+        if not StoreService.session_exists(session_key):
+            # ToDo anonymous
+            pass
+
+        StoreService.add_session_data(param, session_key)
+
+        if request_inc:
+            index = int(request_inc) - 1
+            edge = StoreService.get_edge(session_key, index)
+            edge.update(speed)
+            StoreService.update_edge(session_key, index, edge)
