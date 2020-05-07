@@ -2,6 +2,8 @@ import random
 import string
 from urllib.parse import urlparse
 
+from django.utils.timezone import localtime
+
 
 def get_ip(request):
     x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
@@ -24,6 +26,9 @@ def rand_symbols(length: int = 10):
         ) for _ in range(length)
     )
 
+
+def get_dt():
+    return localtime().today()
 
 def get_session(key):
     return f'session:{key}'
