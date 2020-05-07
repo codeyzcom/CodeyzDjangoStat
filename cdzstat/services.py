@@ -68,14 +68,11 @@ class StoreService:
         return bool(REDIS_CONN.exists(utils.get_session(session)))
 
     @staticmethod
-    def add_node(session: str, path: str, entry_point: bool = True):
+    def add_node(session: str, path: str):
         REDIS_CONN.hset(
             utils.get_node(session),
             path,
-            json.dumps({
-                'counter': 1,
-                'entry_point': str(entry_point)
-            })
+            json.dumps({'dt_create': str(utils.get_dt()), 'counter': 1})
         )
 
     @staticmethod
@@ -93,7 +90,11 @@ class StoreService:
     def add_edge(session: str, from_node: str, to_node: str):
         return REDIS_CONN.rpush(
             utils.get_edge(session),
-            json.dumps({'from': from_node, 'to': to_node})
+            json.dumps({
+                'from': from_node,
+                'to': to_node,
+                'dt_create': str(utils.get_dt())
+            })
         )
 
     @staticmethod
@@ -105,6 +106,7 @@ class StoreService:
             exist_data = json.loads(exist_data)
             exist_data.update(data)
             data = exist_data
+        data['last_change'] = str(utils.get_dt())
         REDIS_CONN.lset(utils.get_edge(session), index, json.dumps(data))
 
     @staticmethod
@@ -235,7 +237,11 @@ class LowLevelService:
 
         response_data = {
             'status_code': data.get('status_code'),
-            'response_time': data.get('response_time')
+            'response_time': data.get('response_time'),
+            'entry_point': ServiceUtils.check_entry_point(
+                referer['host'],
+                referer['path']
+            )
         }
 
         if not session_key:
@@ -253,14 +259,7 @@ class LowLevelService:
         if StoreService.check_node(session_key, current_path):
             StoreService.inc_node(session_key, current_path)
         else:
-            StoreService.add_node(
-                session_key,
-                current_path,
-                ServiceUtils.check_entry_point(
-                    referer['host'],
-                    referer['path']
-                )
-            )
+            StoreService.add_node(session_key, current_path)
 
         edge = StoreService.add_edge(session_key, referer['path'], current_path)
         StoreService.update_edge(session_key, edge, response_data, True)
