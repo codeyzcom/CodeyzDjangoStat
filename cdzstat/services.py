@@ -1,5 +1,6 @@
 import json
 import re
+import time
 from uuid import uuid4
 
 from django.conf import settings
@@ -96,11 +97,19 @@ class StoreService:
         )
 
     @staticmethod
-    def update_edge(session: str, index: int, data: dict) -> None:
+    def update_edge(session: str, index: int, data: dict,
+                    safe: bool = False) -> None:
+        index = int(index) - 1
+        if safe:
+            exist_data = REDIS_CONN.lindex(utils.get_edge(session), index)
+            exist_data = json.loads(exist_data)
+            exist_data.update(data)
+            data = exist_data
         REDIS_CONN.lset(utils.get_edge(session), index, json.dumps(data))
 
     @staticmethod
     def get_edge(session: str, index: int) -> dict:
+        index = int(index) - 1
         result = REDIS_CONN.lindex(utils.get_edge(session), index)
         return json.loads(result)
 
@@ -224,6 +233,11 @@ class LowLevelService:
         current_referer = navigate.get('referer')
         referer = utils.split_url(current_referer)
 
+        response_data = {
+            'status_code': data.get('status_code'),
+            'response_time': data.get('response_time')
+        }
+
         if not session_key:
             new_session = True
         else:
@@ -249,6 +263,8 @@ class LowLevelService:
             )
 
         edge = StoreService.add_edge(session_key, referer['path'], current_path)
+        StoreService.update_edge(session_key, edge, response_data, True)
+
         StoreService.add_adjacency(session_key, current_path, edge)
 
         self._resp.set_cookie(
@@ -274,7 +290,8 @@ class LowLevelService:
         data = {
             'ip_address': utils.get_ip(self._req),
             'user_agent': self._req.META['HTTP_USER_AGENT'],
-            'status_code': self._resp.status_code
+            'status_code': self._resp.status_code,
+            'response_time': time.time() - self._req.start_time
         }
         navigate = {
             'host': self._req.META.get('HTTP_HOST'),
@@ -306,7 +323,6 @@ class HeightLevelService:
         StoreService.add_session_data(param, session_key)
 
         if request_inc:
-            index = int(request_inc) - 1
-            edge = StoreService.get_edge(session_key, index)
+            edge = StoreService.get_edge(session_key, request_inc)
             edge.update(speed)
-            StoreService.update_edge(session_key, index, edge)
+            StoreService.update_edge(session_key, request_inc, edge)
