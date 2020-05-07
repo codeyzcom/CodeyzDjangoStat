@@ -1,5 +1,6 @@
 import random
 import string
+from urllib.parse import urlparse
 
 
 def get_ip(request):
@@ -9,6 +10,11 @@ def get_ip(request):
     else:
         ip = request.META.get('REMOTE_ADDR')
     return ip
+
+
+def split_url(url):
+    full = urlparse(url)
+    return {'host': full.netloc, 'path': full.path}
 
 
 def rand_symbols(length: int = 10):
@@ -37,3 +43,7 @@ def get_edge(key):
 
 def get_adjacency(key):
     return f'adjacency:{key}'
+
+
+def get_static(key):
+    return f'static:{key}'
