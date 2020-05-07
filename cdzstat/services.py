@@ -114,6 +114,10 @@ class StoreService:
         return session
 
     @staticmethod
+    def session_exists(session: str) -> bool:
+        return bool(REDIS_CONN.exists(utils.get_session(session)))
+
+    @staticmethod
     def add_node(session: str, path: str, entry_point: bool = True):
         REDIS_CONN.hset(
             utils.get_node(session),
@@ -198,8 +202,7 @@ class LowLevelService:
         if not session_key:
             new_session = True
         else:
-            skey = REDIS_CONN.hgetall(utils.get_session(session_key))
-            if not skey:
+            if not StoreService.session_exists(session_key):
                 new_session = True
             else:
                 StoreService.set_expire_all(session_key)
