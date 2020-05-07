@@ -1,3 +1,22 @@
+const SERVER_ADDRESS = 'http://127.0.0.1:8099/'
+const CDZ_SESSION_NAME = 'cdz_session'
+const CDZ_REQUEST_NUM_NAME = 'request_inc'
+
+function getCookie(name) {
+    let cookieValue = null;
+    if (document.cookie && document.cookie !== '') {
+        let cookies = document.cookie.split(';');
+        for (let i = 0; i < cookies.length; i++) {
+            let cookie = cookies[i].trim();
+            if (cookie.substring(0, name.length + 1) === (name + '=')) {
+                cookieValue = decodeURIComponent(cookie.substring(name.length + 1));
+                break;
+            }
+        }
+    }
+    return cookieValue;
+}
+
 function getOsVersion() {
     let nAgt = navigator.userAgent;
     let os;
@@ -60,23 +79,49 @@ function getBrowser() {
 }
 
 
-let data = {};
-data['screen_height'] = screen.height;
-data['screen_width'] = screen.width;
-data['screen_color_depth'] = screen.colorDepth;
-data['screen_pixel_depth'] = screen.pixelDepth;
-data['window_height'] = window.innerHeight;
-data['window_width'] = window.innerWidth;
-data['doc_ref'] = document.referrer;
-data['doc_url'] = document.URL;
-data['tz_info'] = Intl.DateTimeFormat().resolvedOptions().timeZone;
-data['user_lang'] = navigator.language || navigator.userLanguage;
-data['platform'] = navigator.platform;
-data['os_version'] = getOsVersion();
-data['browser'] = getBrowser();
+function measure_speed() {
 
+    let t = window.performance.timing;
+    let domLoading = t.domLoading;
+    let domComplete = t.domComplete;
+    let responseStart = t.responseStart;
+    let responseEnd = t.responseEnd;
 
-function sendData(data) {
+    let processing = domComplete - domLoading;
+    let loadingTime = responseEnd - responseStart;
+
+    return {
+        'processing': processing,
+        'loadingTime': loadingTime
+    }
+}
+
+function collect_data() {
+    let data = {};
+    data['session_key'] = getCookie(CDZ_SESSION_NAME)
+    data['request_inc'] = getCookie(CDZ_REQUEST_NUM_NAME)
+    data['doc_ref'] = document.referrer;
+    data['doc_url'] = document.URL;
+    return data;
+}
+
+function collect_param() {
+    let param = {};
+    param['screen_height'] = screen.height;
+    param['screen_width'] = screen.width;
+    param['screen_color_depth'] = screen.colorDepth;
+    param['screen_pixel_depth'] = screen.pixelDepth;
+    param['window_height'] = window.innerHeight;
+    param['window_width'] = window.innerWidth;
+    param['tz_info'] = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    param['user_lang'] = navigator.language || navigator.userLanguage;
+    param['platform'] = navigator.platform;
+    param['os_version'] = getOsVersion();
+    param['browser'] = getBrowser();
+    return param;
+}
+
+function sendDataGet(data) {
     const XHR = new XMLHttpRequest();
 
     let urlEncodedData = "",
@@ -87,13 +132,28 @@ function sendData(data) {
         urlEncodedDataPairs.push(encodeURIComponent(name) + '=' + encodeURIComponent(data[name]))
     }
     urlEncodedData = urlEncodedDataPairs.join('&').replace(/%20/g, '+');
-    XHR.open('GET', 'http://127.0.0.1:8000/cdzstat/collect_statistic?' + urlEncodedData);
+    XHR.open('GET', SERVER_ADDRESS + 'cdzstat/collect_statistic?' + urlEncodedData);
     XHR.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     XHR.send();
     console.log(urlEncodedData)
 }
 
+function sendDataPost(data) {
+    let xhr = new XMLHttpRequest();
+    xhr.open("POST", SERVER_ADDRESS + 'cdzstat/collect_statistic', true);
+    xhr.setRequestHeader('Content-Type', 'application/json');
+    xhr.send(JSON.stringify(data));
+}
 
 (function () {
-    sendData(data);
+    // sendDataGet(data);
 })();
+
+
+window.onload = function () {
+    let data = collect_data();
+    let param = collect_param();
+    let speed = measure_speed();
+    sendDataPost({'data': data, 'param': param, 'speed': speed})
+}
+

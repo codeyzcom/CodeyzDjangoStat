@@ -3,6 +3,27 @@ from django.contrib import admin
 from cdzstat import models
 
 
+class RequestsInline(admin.TabularInline):
+    model = models.Request
+    extra = 0
+    can_delete = False
+    readonly_fields = (
+        'id',
+        'key',
+        'dt_create',
+        'session',
+        'entry_point',
+        'host',
+        'path',
+        'referer',
+        'external_referer',
+        'status_code',
+        'response_time',
+        'processing_time',
+        'loading'
+    )
+
+
 @admin.register(models.Host)
 class HostAdmin(admin.ModelAdmin):
     list_display = ('id', 'host')
@@ -29,19 +50,23 @@ class UserAgentAdmin(admin.ModelAdmin):
 @admin.register(models.Request)
 class RequestAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'path', 'ip', 'status_code', 'response_time', 'dt_create'
+        'id', 'path', 'status_code', 'response_time', 'dt_create', 'entry_point'
     )
-    search_fields = ('ip__ip',)
     list_filter = ('status_code',)
     readonly_fields = (
         'id',
+        'key',
         'dt_create',
-        'ip',
-        'ua',
+        'session',
+        'entry_point',
         'host',
         'path',
+        'referer',
+        'external_referer',
         'status_code',
-        'response_time'
+        'response_time',
+        'processing_time',
+        'loading'
     )
 
 
@@ -77,11 +102,6 @@ class ColorParamAdmin(admin.ModelAdmin):
     list_display = ('id', 'color_depth', 'pixel_depth')
 
 
-@admin.register(models.Platform)
-class PlatformAdmin(admin.ModelAdmin):
-    list_display = ('data',)
-
-
 @admin.register(models.UserLang)
 class UserLangAdmin(admin.ModelAdmin):
     list_display = ('data',)
@@ -92,11 +112,18 @@ class BrowserAdmin(admin.ModelAdmin):
     list_display = ('id', 'data', 'version')
 
 
-@admin.register(models.UserParam)
-class UserParamAdmin(admin.ModelAdmin):
-    list_display = ('id', 'browser', 'time_zone', 'user_lang')
-
-
 @admin.register(models.SystemInfo)
 class SystemInfoAdmin(admin.ModelAdmin):
     list_display = ('id', 'platform', 'os_version')
+
+
+@admin.register(models.SessionData)
+class SessionDataAdmin(admin.ModelAdmin):
+    list_display = ('key', 'dt_create', 'expire_date')
+    ordering = ('-dt_create',)
+    inlines = (RequestsInline,)
+
+
+@admin.register(models.ExternalReferer)
+class ExternalRefererAdmin(admin.ModelAdmin):
+    pass
