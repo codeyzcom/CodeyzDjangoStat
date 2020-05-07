@@ -1,4 +1,6 @@
-const serverAddress = 'http://192.168.1.123:8001/'
+const SERVER_ADDRESS = 'http://127.0.0.1:8099/'
+const CDZ_SESSION_NAME = 'cdz_session'
+const CDZ_REQUEST_NUM_NAME = 'request_inc'
 
 function getCookie(name) {
     let cookieValue = null;
@@ -94,21 +96,30 @@ function measure_speed() {
     }
 }
 
-let data = {};
-data['screen_height'] = screen.height;
-data['screen_width'] = screen.width;
-data['screen_color_depth'] = screen.colorDepth;
-data['screen_pixel_depth'] = screen.pixelDepth;
-data['window_height'] = window.innerHeight;
-data['window_width'] = window.innerWidth;
-data['doc_ref'] = document.referrer;
-data['doc_url'] = document.URL;
-data['tz_info'] = Intl.DateTimeFormat().resolvedOptions().timeZone;
-data['user_lang'] = navigator.language || navigator.userLanguage;
-data['platform'] = navigator.platform;
-data['os_version'] = getOsVersion();
-data['browser'] = getBrowser();
+function collect_data() {
+    let data = {};
+    data['session_key'] = getCookie(CDZ_SESSION_NAME)
+    data['request_inc'] = getCookie(CDZ_REQUEST_NUM_NAME)
+    data['doc_ref'] = document.referrer;
+    data['doc_url'] = document.URL;
+    return data;
+}
 
+function collect_param() {
+    let param = {};
+    param['screen_height'] = screen.height;
+    param['screen_width'] = screen.width;
+    param['screen_color_depth'] = screen.colorDepth;
+    param['screen_pixel_depth'] = screen.pixelDepth;
+    param['window_height'] = window.innerHeight;
+    param['window_width'] = window.innerWidth;
+    param['tz_info'] = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    param['user_lang'] = navigator.language || navigator.userLanguage;
+    param['platform'] = navigator.platform;
+    param['os_version'] = getOsVersion();
+    param['browser'] = getBrowser();
+    return param;
+}
 
 function sendDataGet(data) {
     const XHR = new XMLHttpRequest();
@@ -121,27 +132,28 @@ function sendDataGet(data) {
         urlEncodedDataPairs.push(encodeURIComponent(name) + '=' + encodeURIComponent(data[name]))
     }
     urlEncodedData = urlEncodedDataPairs.join('&').replace(/%20/g, '+');
-    XHR.open('GET', serverAddress + 'cdzstat/collect_statistic?' + urlEncodedData);
+    XHR.open('GET', SERVER_ADDRESS + 'cdzstat/collect_statistic?' + urlEncodedData);
     XHR.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
     XHR.send();
     console.log(urlEncodedData)
 }
 
 function sendDataPost(data) {
-    console.log(JSON.stringify({value: data}));
     let xhr = new XMLHttpRequest();
-    xhr.open("POST", serverAddress + 'cdzstat/collect_statistic', true);
+    xhr.open("POST", SERVER_ADDRESS + 'cdzstat/collect_statistic', true);
     xhr.setRequestHeader('Content-Type', 'application/json');
     xhr.send(JSON.stringify(data));
 }
 
 (function () {
-    sendDataGet(data);
+    // sendDataGet(data);
 })();
 
 
 window.onload = function () {
-    let speed = {'speed': measure_speed()}
-    sendDataPost(speed)
+    let data = collect_data();
+    let param = collect_param();
+    let speed = measure_speed();
+    sendDataPost({'data': data, 'param': param, 'speed': speed})
 }
 

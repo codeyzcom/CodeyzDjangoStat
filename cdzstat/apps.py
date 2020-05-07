@@ -5,4 +5,7 @@ class CdzstatConfig(AppConfig):
     name = 'cdzstat'
 
     def ready(self):
-        from . import signals
+        from . import signals  # noqa
+
+        from cdzstat.services import ServiceUtils
+        ServiceUtils.initialize_data()
