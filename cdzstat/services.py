@@ -62,6 +62,8 @@ class StoreService:
 
     @staticmethod
     def session_exists(session: str) -> bool:
+        if session is None:
+            return False
         return bool(REDIS_CONN.exists(utils.get_session(session)))
 
     @staticmethod
@@ -107,7 +109,16 @@ class StoreService:
         )
 
     @staticmethod
-    def set_expire_all(session):
+    def get_adjacency(session: str, key: str) -> list:
+        result = REDIS_CONN.hget(utils.get_adjacency(session), key)
+        return json.loads(result)
+
+    @staticmethod
+    def get_adjacency_all(session: str) -> dict:
+        return REDIS_CONN.hgetall(utils.get_adjacency(session))
+
+    @staticmethod
+    def set_expire_all(session: str) -> None:
         with REDIS_CONN.pipeline() as pipe:
             pipe.expire(utils.get_session(session), CDZSTAT_SESSION_AGE)
             pipe.expire(utils.get_node(session), CDZSTAT_SESSION_AGE)
