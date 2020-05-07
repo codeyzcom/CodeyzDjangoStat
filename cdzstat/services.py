@@ -104,6 +104,16 @@ class StoreService:
         pass
 
     @staticmethod
+    def add_session_data(data: dict, session: str = None) -> str:
+        if session is None:
+            session = str(uuid4())
+        with REDIS_CONN.pipeline() as pipe:
+            for k, v in data.items():
+                pipe.hset(utils.get_session(session), k, v)
+            pipe.execute()
+        return session
+
+    @staticmethod
     def add_node(session: str, path: str, entry_point: bool = True):
         REDIS_CONN.hset(
             utils.get_node(session),
@@ -195,12 +205,8 @@ class LowLevelService:
                 StoreService.set_expire_all(session_key)
 
         if new_session:
-            session_key = str(uuid4())
-            with REDIS_CONN.pipeline() as pipe:
-                for k, v in data.items():
-                    pipe.hset(utils.get_session(session_key), k, v)
-                pipe.execute()
-                StoreService.set_expire_all(session_key)
+            session_key = StoreService.add_session_data(data, session_key)
+            StoreService.set_expire_all(session_key)
 
         if StoreService.check_node(session_key, current_path):
             StoreService.inc_node(session_key, current_path)
