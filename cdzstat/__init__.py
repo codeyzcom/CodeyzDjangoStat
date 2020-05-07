@@ -18,4 +18,4 @@ USER_AGENT_CACHE = []
 EXCEPTION_CACHE_REGEX = {}
 EXCEPTION_CACHE_DIRECT = {}
 
-REDIS_CONN = Redis()
+REDIS_CONN = Redis(decode_responses=True)

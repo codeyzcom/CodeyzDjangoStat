@@ -1,12 +1,8 @@
 import json
 import re
-import time
-from urllib.parse import urlparse
-from datetime import timedelta
 from uuid import uuid4
 
 from django.conf import settings
-from django.utils import timezone
 
 from . import (
     USER_AGENT_CACHE,
@@ -17,13 +13,36 @@ from . import (
 from .settings import (
     CDZSTAT_IGNORE_BOTS,
     CDZSTAT_SESSION_COOKIE_NAME,
-    CDZSTAT_SESSION_COOKIE_AGE,
+    CDZSTAT_SESSION_AGE,
 )
 from cdzstat import (
     models,
     handlers,
     utils,
 )
+
+
+class ServiceUtils:
+
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def initialize_data():
+        hosts = models.Host.objects.values_list('host', flat=True)
+
+        REDIS_CONN.delete(utils.get_static('hosts'))
+        for host in hosts:
+            REDIS_CONN.sadd(utils.get_static('hosts'), host)
+
+    @staticmethod
+    def check_entry_point(referer, path):
+        result = True
+        if path:
+            result = not REDIS_CONN.sismember(
+                utils.get_static('hosts'), referer
+            )
+        return result
 
 
 class ExceptionService:
@@ -79,7 +98,7 @@ class ExceptionService:
             return True
 
 
-class NavigateService:
+class StoreService:
 
     def __init__(self):
         pass
@@ -90,7 +109,7 @@ class NavigateService:
             utils.get_node(session),
             path,
             json.dumps({
-                'counter': 0,
+                'counter': 1,
                 'entry_point': str(entry_point)
             })
         )
@@ -108,14 +127,46 @@ class NavigateService:
 
     @staticmethod
     def add_edge(session: str, from_node: str, to_node: str):
-        REDIS_CONN.rpush(
+        return REDIS_CONN.rpush(
             utils.get_edge(session),
             json.dumps({'from': from_node, 'to': to_node})
         )
 
     @staticmethod
-    def add_adjacency(session: str, node: str, edges: list):
-        REDIS_CONN.hset(utils.get_adjacency(session), node, edges)
+    def add_adjacency(session: str, node: str, edge: int):
+        edges = [edge]
+        adjacency = REDIS_CONN.hget(utils.get_adjacency(session), node)
+        if adjacency:
+            adjacency = json.loads(adjacency)
+            edges.extend(adjacency)
+        return REDIS_CONN.hset(
+            utils.get_adjacency(session),
+            node,
+            json.dumps(edges)
+        )
+
+    @staticmethod
+    def set_expire_all(session):
+        with REDIS_CONN.pipeline() as pipe:
+            pipe.expire(utils.get_session(session), CDZSTAT_SESSION_AGE)
+            pipe.expire(utils.get_node(session), CDZSTAT_SESSION_AGE)
+            pipe.expire(utils.get_edge(session), CDZSTAT_SESSION_AGE)
+            pipe.expire(utils.get_adjacency(session), CDZSTAT_SESSION_AGE)
+            pipe.execute()
+
+    @staticmethod
+    def to_json(session):
+        session_data = REDIS_CONN.hgetall(utils.get_session(session))
+        node_data = REDIS_CONN.hgetall(utils.get_node(session))
+        edge_data = REDIS_CONN.lrange(utils.get_edge(session), 0, -1)
+        adjacency_data = REDIS_CONN.hgetall(utils.get_adjacency(session))
+
+        return json.dumps({
+            'session': session_data,
+            'node': node_data,
+            'edge': edge_data,
+            'adjacency': adjacency_data
+        })
 
 
 class LowLevelService:
@@ -131,8 +182,8 @@ class LowLevelService:
         new_session = False
 
         current_path = navigate.get('path')
-        # Todo split referer on host and path
         current_referer = navigate.get('referer')
+        referer = utils.split_url(current_referer)
 
         if not session_key:
             new_session = True
@@ -141,10 +192,7 @@ class LowLevelService:
             if not skey:
                 new_session = True
             else:
-                REDIS_CONN.expire(
-                    utils.get_session(utils.get_session(session_key)),
-                    CDZSTAT_SESSION_COOKIE_AGE
-                )
+                StoreService.set_expire_all(session_key)
 
         if new_session:
             session_key = str(uuid4())
@@ -152,23 +200,27 @@ class LowLevelService:
                 for k, v in data.items():
                     pipe.hset(utils.get_session(session_key), k, v)
                 pipe.execute()
-            REDIS_CONN.expire(
-                utils.get_session(session_key),
-                CDZSTAT_SESSION_COOKIE_AGE
+                StoreService.set_expire_all(session_key)
+
+        if StoreService.check_node(session_key, current_path):
+            StoreService.inc_node(session_key, current_path)
+        else:
+            StoreService.add_node(
+                session_key,
+                current_path,
+                ServiceUtils.check_entry_point(
+                    referer['host'],
+                    referer['path']
+                )
             )
 
-        if NavigateService.check_node(session_key, current_path):
-            NavigateService.inc_node(session_key, current_path)
-        else:
-            # ToDo check entry_point
-            NavigateService.add_node(session_key, current_path, False)
-
-        NavigateService.add_edge(session_key, current_referer, current_path)
+        edge = StoreService.add_edge(session_key, referer['path'], current_path)
+        StoreService.add_adjacency(session_key, current_path, edge)
 
         self._resp.set_cookie(
             CDZSTAT_SESSION_COOKIE_NAME,
             session_key,
-            expires=CDZSTAT_SESSION_COOKIE_AGE,
+            expires=CDZSTAT_SESSION_AGE,
             path=settings.SESSION_COOKIE_PATH,
             secure=settings.SESSION_COOKIE_SECURE or None,
             samesite=settings.SESSION_COOKIE_SAMESITE,
