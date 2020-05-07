@@ -1,5 +1,6 @@
-const SERVER_ADDRESS = 'http://192.168.1.123:8001/'
+const SERVER_ADDRESS = 'http://127.0.0.1:8099/'
 const CDZ_SESSION_NAME = 'cdz_session'
+const CDZ_REQUEST_NUM_NAME = 'request_inc'
 
 function getCookie(name) {
     let cookieValue = null;
@@ -98,6 +99,7 @@ function measure_speed() {
 function collect_data() {
     let data = {};
     data['session_key'] = getCookie(CDZ_SESSION_NAME)
+    data['request_inc'] = getCookie(CDZ_REQUEST_NUM_NAME)
     data['doc_ref'] = document.referrer;
     data['doc_url'] = document.URL;
     return data;
