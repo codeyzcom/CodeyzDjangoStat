@@ -96,6 +96,16 @@ class StoreService:
         )
 
     @staticmethod
+    def get_edge(session: str, index: int) -> dict:
+        result = REDIS_CONN.lindex(utils.get_edge(session), index)
+        return json.loads(result)
+
+    @staticmethod
+    def get_edge_all(session: str) -> dict:
+        result = REDIS_CONN.lrange(utils.get_edge(session), 0, -1)
+        return json.loads(result)
+
+    @staticmethod
     def add_adjacency(session: str, node: str, edge: int):
         edges = [edge]
         adjacency = REDIS_CONN.hget(utils.get_adjacency(session), node)
