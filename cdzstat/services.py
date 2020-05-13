@@ -367,4 +367,17 @@ class DataHandlerService:
         self._data = data
 
     def process(self):
-        print(f'Process data with session key: {self._data}')
+        data = json.loads(self._data)
+        from_level = data.get('from')
+        session_key = data.get(CDZSTAT_SESSION_COOKIE_NAME)
+
+        if from_level == 'low_level':
+            transition = data.get('transition')
+        elif from_level == 'height_level':
+            request_inc = data.get('request_ins')
+            is_anonymous = data.get('is_anonymous')
+
+        full_data = StoreService.to_json(session_key)
+
+        for k, v in json.loads(full_data).items():
+            print(k, v, '\n\n')
