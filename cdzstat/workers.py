@@ -24,7 +24,7 @@ class SessionWorker:
 
         while True:
             message = ps.get_message()
-            if message:
+            if message and message.get('type') == 'message':
                 data_handle_task = loop.create_task(
                     SessionWorker._wrapper(loop, message.get('data'))
                 )
