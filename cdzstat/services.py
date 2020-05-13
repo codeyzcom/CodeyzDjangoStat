@@ -240,7 +240,7 @@ class LowLevelService:
         self._resp = response
 
     def process(self) -> None:
-        session_key, data, navigate = self._collect_data()
+        session_key, s_data, d_data, navigate = self._collect_data()
 
         session_key = session_key[0]
         new_session = False
@@ -250,8 +250,8 @@ class LowLevelService:
         referer = utils.split_url(current_referer)
 
         response_data = {
-            'status_code': data.get('status_code'),
-            'response_time': data.get('response_time'),
+            'status_code': d_data.get('status_code'),
+            'response_time': d_data.get('response_time'),
             'entry_point': ServiceUtils.check_entry_point(
                 referer['host'],
                 referer['path']
@@ -267,7 +267,7 @@ class LowLevelService:
                 StoreService.set_expire_all(session_key)
 
         if new_session:
-            session_key = StoreService.add_session_data(data, session_key)
+            session_key = StoreService.add_session_data(s_data, session_key)
             StoreService.set_expire_all(session_key)
 
         if StoreService.check_node(session_key, current_path):
@@ -310,9 +310,11 @@ class LowLevelService:
 
     def _collect_data(self) -> (str, dict, dict):
         session = self._req.COOKIES.get(CDZSTAT_SESSION_COOKIE_NAME),
-        data = {
+        data_static = {
             'ip_address': utils.get_ip(self._req),
             'user_agent': self._req.META['HTTP_USER_AGENT'],
+        }
+        data_dynamic = {
             'status_code': self._resp.status_code,
             'response_time': time.time() - self._req.start_time
         }
@@ -321,7 +323,7 @@ class LowLevelService:
             'path': self._req.path,
             'referer': self._req.META.get('HTTP_REFERER') or '',
         }
-        return session, data, navigate
+        return session, data_static, data_dynamic, navigate
 
 
 class HeightLevelService:
