@@ -1,5 +1,7 @@
 from django.core.management.base import BaseCommand, CommandError
 
+from cdzstat import workers
+
 
 class Command(BaseCommand):
     help = 'Run statistics collection worker - CodeyzDjangoStat'
@@ -8,4 +10,5 @@ class Command(BaseCommand):
         pass
 
     def handle(self, *args, **options):
-        print('Test')
+        worker = workers.SessionWorker()
+        worker.run()
