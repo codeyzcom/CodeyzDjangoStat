@@ -16,6 +16,7 @@ from .settings import (
     CDZSTAT_SESSION_COOKIE_NAME,
     CDZSTAT_SESSION_AGE,
     CDZSTAT_REQUEST_NUM_NAME,
+    CDZSTAT_QUEUE_SESSION,
 )
 from cdzstat import (
     models,
@@ -294,7 +295,7 @@ class LowLevelService:
             samesite=settings.SESSION_COOKIE_SAMESITE,
         )
 
-        NotifyService.send_notify('one', json.dumps({
+        NotifyService.send_notify(CDZSTAT_QUEUE_SESSION, json.dumps({
             'from': 'low_level',
             CDZSTAT_SESSION_COOKIE_NAME: session_key,
             'edge': edge
@@ -343,7 +344,7 @@ class HeightLevelService:
             edge.update(speed)
             StoreService.update_edge(session_key, request_inc, edge)
 
-        NotifyService.send_notify('one', json.dumps({
+        NotifyService.send_notify(CDZSTAT_QUEUE_SESSION, json.dumps({
             'from': 'height_level',
             CDZSTAT_SESSION_COOKIE_NAME: session_key,
             CDZSTAT_REQUEST_NUM_NAME: request_inc,

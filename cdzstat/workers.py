@@ -5,9 +5,10 @@ from concurrent.futures import ThreadPoolExecutor
 from cdzstat import (
     REDIS_CONN,
     services,
+    settings,
 )
 
-_executor = ThreadPoolExecutor(5)
+_executor = ThreadPoolExecutor(settings.CDZSTAT_WORKERS_THREAD_NUMBER)
 
 
 class SessionWorker:
@@ -17,7 +18,7 @@ class SessionWorker:
 
     def run(self):
         ps = REDIS_CONN.pubsub()
-        ps.subscribe('one')
+        ps.subscribe(settings.CDZSTAT_QUEUE_SESSION)
 
         loop = asyncio.get_event_loop()
 
