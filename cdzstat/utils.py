@@ -43,8 +43,8 @@ def get_node(key: str) -> str:
     return f'node:{key}'
 
 
-def get_edge(key: str) -> str:
-    return f'edge:{key}'
+def get_transition(key: str) -> str:
+    return f'transition:{key}'
 
 
 def get_adjacency(key: str) -> str:

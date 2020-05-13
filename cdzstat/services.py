@@ -98,9 +98,9 @@ class StoreService:
         return REDIS_CONN.hexists(utils.get_node(session), path)
 
     @staticmethod
-    def add_edge(session: str, from_node: str, to_node: str):
+    def add_transition(session: str, from_node: str, to_node: str):
         return REDIS_CONN.rpush(
-            utils.get_edge(session),
+            utils.get_transition(session),
             json.dumps({
                 'from': from_node,
                 'to': to_node,
@@ -109,39 +109,41 @@ class StoreService:
         )
 
     @staticmethod
-    def update_edge(session: str, index: int, data: dict,
+    def update_transition(session: str, index: int, data: dict,
                     safe: bool = False) -> None:
         index = int(index) - 1
         if safe:
-            exist_data = REDIS_CONN.lindex(utils.get_edge(session), index)
+            exist_data = REDIS_CONN.lindex(
+                utils.get_transition(session), index
+            )
             exist_data = json.loads(exist_data)
             exist_data.update(data)
             data = exist_data
         data['last_change'] = str(utils.get_dt())
-        REDIS_CONN.lset(utils.get_edge(session), index, json.dumps(data))
+        REDIS_CONN.lset(utils.get_transition(session), index, json.dumps(data))
 
     @staticmethod
-    def get_edge(session: str, index: int) -> dict:
+    def get_transition(session: str, index: int) -> dict:
         index = int(index) - 1
-        result = REDIS_CONN.lindex(utils.get_edge(session), index)
+        result = REDIS_CONN.lindex(utils.get_transition(session), index)
         return json.loads(result)
 
     @staticmethod
-    def get_edge_all(session: str) -> dict:
-        result = REDIS_CONN.lrange(utils.get_edge(session), 0, -1)
+    def get_transition_all(session: str) -> dict:
+        result = REDIS_CONN.lrange(utils.get_transition(session), 0, -1)
         return json.loads(result)
 
     @staticmethod
-    def add_adjacency(session: str, node: str, edge: int):
-        edges = [edge]
+    def add_adjacency(session: str, node: str, transition: int):
+        transitions = [transition]
         adjacency = REDIS_CONN.hget(utils.get_adjacency(session), node)
         if adjacency:
             adjacency = json.loads(adjacency)
-            edges.extend(adjacency)
+            transitions.extend(adjacency)
         return REDIS_CONN.hset(
             utils.get_adjacency(session),
             node,
-            json.dumps(edges)
+            json.dumps(transitions)
         )
 
     @staticmethod
@@ -158,7 +160,7 @@ class StoreService:
         with REDIS_CONN.pipeline() as pipe:
             pipe.expire(utils.get_session(session), CDZSTAT_SESSION_AGE)
             pipe.expire(utils.get_node(session), CDZSTAT_SESSION_AGE)
-            pipe.expire(utils.get_edge(session), CDZSTAT_SESSION_AGE)
+            pipe.expire(utils.get_transition(session), CDZSTAT_SESSION_AGE)
             pipe.expire(utils.get_adjacency(session), CDZSTAT_SESSION_AGE)
             pipe.execute()
 
@@ -166,13 +168,14 @@ class StoreService:
     def to_json(session):
         session_data = REDIS_CONN.hgetall(utils.get_session(session))
         node_data = REDIS_CONN.hgetall(utils.get_node(session))
-        edge_data = REDIS_CONN.lrange(utils.get_edge(session), 0, -1)
         adjacency_data = REDIS_CONN.hgetall(utils.get_adjacency(session))
+        transition_data = REDIS_CONN.lrange(
+            utils.get_transition(session), 0, -1)
 
         return json.dumps({
             'session': session_data,
             'node': node_data,
-            'edge': edge_data,
+            'transition': transition_data,
             'adjacency': adjacency_data
         })
 
@@ -272,14 +275,18 @@ class LowLevelService:
         else:
             StoreService.add_node(session_key, current_path)
 
-        edge = StoreService.add_edge(session_key, referer['path'], current_path)
-        StoreService.update_edge(session_key, edge, response_data, True)
+        transition = StoreService.add_transition(
+            session_key, referer['path'], current_path
+        )
+        StoreService.update_transition(
+            session_key, transition, response_data, True
+        )
 
-        StoreService.add_adjacency(session_key, current_path, edge)
+        StoreService.add_adjacency(session_key, current_path, transition)
 
         self._resp.set_cookie(
             CDZSTAT_REQUEST_NUM_NAME,
-            edge,
+            transition,
             expires=CDZSTAT_SESSION_AGE,
             path=settings.SESSION_COOKIE_PATH,
             secure=settings.SESSION_COOKIE_SECURE or None,
@@ -298,7 +305,7 @@ class LowLevelService:
         NotifyService.send_notify(CDZSTAT_QUEUE_SESSION, json.dumps({
             'from': 'low_level',
             CDZSTAT_SESSION_COOKIE_NAME: session_key,
-            'edge': edge
+            'transition': transition
         }))
 
     def _collect_data(self) -> (str, dict, dict):
@@ -340,9 +347,11 @@ class HeightLevelService:
         StoreService.add_session_data(param, session_key)
 
         if request_inc:
-            edge = StoreService.get_edge(session_key, request_inc)
-            edge.update(speed)
-            StoreService.update_edge(session_key, request_inc, edge)
+            transition = StoreService.get_transition(session_key, request_inc)
+            transition.update(speed)
+            StoreService.update_transition(
+                session_key, request_inc, transition
+            )
 
         NotifyService.send_notify(CDZSTAT_QUEUE_SESSION, json.dumps({
             'from': 'height_level',
