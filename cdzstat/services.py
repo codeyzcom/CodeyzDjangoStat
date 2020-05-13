@@ -46,6 +46,16 @@ class ServiceUtils:
         return result
 
 
+class NotifyService:
+
+    def __init__(self):
+        pass
+
+    @staticmethod
+    def send_notify(channel: str, data: str) -> None:
+        REDIS_CONN.publish(channel, data)
+
+
 class StoreService:
 
     def __init__(self):
@@ -284,6 +294,12 @@ class LowLevelService:
             samesite=settings.SESSION_COOKIE_SAMESITE,
         )
 
+        NotifyService.send_notify('one', json.dumps({
+            'from': 'low_level',
+            CDZSTAT_SESSION_COOKIE_NAME: session_key,
+            'edge': edge
+        }))
+
     def _collect_data(self) -> (str, dict, dict):
         session = self._req.COOKIES.get(CDZSTAT_SESSION_COOKIE_NAME),
         data = {
@@ -315,7 +331,8 @@ class HeightLevelService:
         session_key = data.get('session_key')
         request_inc = data.get('request_inc')
 
-        if not StoreService.session_exists(session_key):
+        is_anonymous = not StoreService.session_exists(session_key)
+        if is_anonymous:
             # ToDo anonymous
             pass
 
@@ -325,3 +342,19 @@ class HeightLevelService:
             edge = StoreService.get_edge(session_key, request_inc)
             edge.update(speed)
             StoreService.update_edge(session_key, request_inc, edge)
+
+        NotifyService.send_notify('one', json.dumps({
+            'from': 'height_level',
+            CDZSTAT_SESSION_COOKIE_NAME: session_key,
+            CDZSTAT_REQUEST_NUM_NAME: request_inc,
+            'is_anonymous': is_anonymous
+        }))
+
+
+class DataHandlerService:
+
+    def __init__(self, data):
+        self._data = data
+
+    def process(self):
+        print(f'Process data with session key: {self._data}')
