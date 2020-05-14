@@ -29,5 +29,5 @@ class SessionWorker:
             message = ps.get_message()
             if message and message.get('type') == 'message':
                 dhs = services.DataHandlerService(message.get('data'))
-                self.q.enqueue(dhs.process)
+                self.q.enqueue(dhs.process, result_ttl=5)
             time.sleep(0.1)
