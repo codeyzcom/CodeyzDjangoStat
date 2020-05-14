@@ -1,6 +1,6 @@
 import time
-import asyncio
-from concurrent.futures import ThreadPoolExecutor
+
+from rq import Connection, Worker, Queue
 
 from cdzstat import (
     REDIS_CONN,
@@ -8,30 +8,26 @@ from cdzstat import (
     settings,
 )
 
-_executor = ThreadPoolExecutor(settings.CDZSTAT_WORKERS_THREAD_NUMBER)
+
+def run_rq_worker():
+    with Connection():
+        qs = ['default']
+        w = Worker(qs)
+        w.work()
 
 
 class SessionWorker:
 
     def __init__(self):
-        pass
+        self.q = Queue(connection=REDIS_CONN)
 
     def run(self):
         ps = REDIS_CONN.pubsub()
         ps.subscribe(settings.CDZSTAT_QUEUE_SESSION)
 
-        loop = asyncio.get_event_loop()
-
         while True:
             message = ps.get_message()
             if message and message.get('type') == 'message':
-                data_handle_task = loop.create_task(
-                    SessionWorker._wrapper(loop, message.get('data'))
-                )
-                loop.run_until_complete(data_handle_task)
+                dhs = services.DataHandlerService(message.get('data'))
+                self.q.enqueue(dhs.process)
             time.sleep(0.1)
-
-    @staticmethod
-    async def _wrapper(loop, data):
-        data_handler = services.DataHandlerService(data)
-        await loop.run_in_executor(_executor, data_handler.process)

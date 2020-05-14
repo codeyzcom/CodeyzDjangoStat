@@ -1,4 +1,6 @@
-from django.core.management.base import BaseCommand, CommandError
+import multiprocessing as mp
+
+from django.core.management.base import BaseCommand
 
 from cdzstat import workers
 
@@ -10,5 +12,8 @@ class Command(BaseCommand):
         pass
 
     def handle(self, *args, **options):
-        worker = workers.SessionWorker()
-        worker.run()
+        rq_worker = mp.Process(target=workers.run_rq_worker)
+        session_worker = mp.Process(target=workers.SessionWorker().run)
+
+        rq_worker.start()
+        session_worker.start()
