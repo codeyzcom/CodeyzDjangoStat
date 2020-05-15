@@ -5,6 +5,19 @@ from django.db import models
 from . import EXCEPTION_TYPE, utils
 
 
+class TimestampMixin(models.Model):
+    class Meta:
+        abstract = True
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Время создания'
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name='Время последнего изменения'
+    )
+
+
 class TimeZoneInfo(models.Model):
     name = models.CharField(max_length=64)
     abbr = models.CharField(max_length=8, verbose_name='abbreviation')
