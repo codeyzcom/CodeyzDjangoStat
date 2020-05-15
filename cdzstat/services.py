@@ -156,12 +156,24 @@ class StoreService:
         return REDIS_CONN.hgetall(utils.get_adjacency(session))
 
     @staticmethod
+    def add_ip_address(session: str, ip: str, transition: int):
+        transitions = [transition]
+        ip_address = REDIS_CONN.hget(utils.get_ip_address(session), ip)
+        if ip_address:
+            exists_data = json.loads(ip_address)
+            transitions.extend(exists_data)
+        REDIS_CONN.hset(
+            utils.get_ip_address(session), ip, json.dumps(transitions)
+        )
+
+    @staticmethod
     def set_expire_all(session: str) -> None:
         with REDIS_CONN.pipeline() as pipe:
             pipe.expire(utils.get_session(session), CDZSTAT_SESSION_AGE)
             pipe.expire(utils.get_node(session), CDZSTAT_SESSION_AGE)
             pipe.expire(utils.get_transition(session), CDZSTAT_SESSION_AGE)
             pipe.expire(utils.get_adjacency(session), CDZSTAT_SESSION_AGE)
+            pipe.expire(utils.get_ip_address(session), CDZSTAT_SESSION_AGE)
             pipe.execute()
 
     @staticmethod
@@ -169,6 +181,7 @@ class StoreService:
         session_data = REDIS_CONN.hgetall(utils.get_session(session))
         node_data = REDIS_CONN.hgetall(utils.get_node(session))
         adjacency_data = REDIS_CONN.hgetall(utils.get_adjacency(session))
+        ip_address = REDIS_CONN.hgetall(utils.get_ip_address(session))
         transition_data = REDIS_CONN.lrange(
             utils.get_transition(session), 0, -1)
 
@@ -176,7 +189,8 @@ class StoreService:
             'session': session_data,
             'node': node_data,
             'transition': transition_data,
-            'adjacency': adjacency_data
+            'adjacency': adjacency_data,
+            'ip_address': ip_address,
         })
 
 
@@ -297,9 +311,16 @@ class LowLevelService:
         )
 
         """
-        Each time add adjacency
+        Each time add information about adjacency to the data store
         """
         StoreService.add_adjacency(session_key, current_path, transition)
+
+        """
+        Each time add information about ip address to the data store
+        """
+        StoreService.add_ip_address(
+            session_key, collected_data.get('ip_address'), transition
+        )
 
         StoreService.set_expire_all(session_key)
 
