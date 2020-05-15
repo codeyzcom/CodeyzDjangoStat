@@ -417,13 +417,17 @@ class DataHandlerService:
         from_level = data.get('from')
         session_key = data.get(CDZSTAT_SESSION_COOKIE_NAME)
 
+        print(data)
+
         if from_level == 'low_level':
-            transition = data.get('transition')
+            DataHandlerService._low_level_handler(data)
         elif from_level == 'height_level':
-            request_inc = data.get('request_ins')
-            is_anonymous = data.get('is_anonymous')
+            DataHandlerService._height_level_handler(data)
 
-        full_data = StoreService.to_json(session_key)
+    @staticmethod
+    def _low_level_handler(data):
+        pass
 
-        for k, v in json.loads(full_data).items():
-            print(k, v, '\n\n')
+    @staticmethod
+    def _height_level_handler(data):
+        pass
