@@ -371,6 +371,10 @@ class LowLevelService:
 
 
 class HeightLevelService:
+    """
+    Service called when received request from cdz_stat.js and it processes
+    the received information by storing it in data store
+    """
 
     def __init__(self, request):
         self._req = request
@@ -385,6 +389,15 @@ class HeightLevelService:
         session_key = data.get('session_key')
         request_inc = data.get('request_inc')
 
+        mutable_params = {
+            'screen_height': param.pop('screen_height'),
+            'screen_width': param.pop('screen_width'),
+            'window_height': param.pop('window_height'),
+            'window_width': param.pop('window_width'),
+            'screen_color_depth': param.pop('screen_color_depth'),
+            'screen_pixel_depth': param.pop('screen_pixel_depth')
+        }
+
         is_anonymous = not StoreService.session_exists(session_key)
         if is_anonymous:
             # ToDo anonymous
@@ -392,13 +405,21 @@ class HeightLevelService:
 
         StoreService.add_session_data(param, session_key)
 
+        """
+        If we get the request id from the cookie, then we update the
+        information in the data store using the session key
+        """
         if request_inc:
             transition = StoreService.get_transition(session_key, request_inc)
             transition.update(speed)
+            transition.update(mutable_params)
             StoreService.update_transition(
                 session_key, request_inc, transition
             )
 
+        """
+        At the end send notification for the SessionWorker  
+        """
         NotifyService.send_notify(CDZSTAT_QUEUE_SESSION, json.dumps({
             'from': 'height_level',
             CDZSTAT_SESSION_COOKIE_NAME: session_key,
