@@ -98,7 +98,7 @@ class StoreService:
         return REDIS_CONN.hexists(utils.get_node(session), path)
 
     @staticmethod
-    def add_transition(session: str, from_node: str, to_node: str):
+    def add_transition(session: str, from_node: str, to_node: str) -> int:
         return REDIS_CONN.rpush(
             utils.get_transition(session),
             json.dumps({
@@ -110,7 +110,7 @@ class StoreService:
 
     @staticmethod
     def update_transition(session: str, index: int, data: dict,
-                    safe: bool = False) -> None:
+                          safe: bool = False) -> None:
         index = int(index) - 1
         if safe:
             exist_data = REDIS_CONN.lindex(
@@ -156,12 +156,24 @@ class StoreService:
         return REDIS_CONN.hgetall(utils.get_adjacency(session))
 
     @staticmethod
+    def add_ip_address(session: str, ip: str, transition: int):
+        transitions = [transition]
+        ip_address = REDIS_CONN.hget(utils.get_ip_address(session), ip)
+        if ip_address:
+            exists_data = json.loads(ip_address)
+            transitions.extend(exists_data)
+        REDIS_CONN.hset(
+            utils.get_ip_address(session), ip, json.dumps(transitions)
+        )
+
+    @staticmethod
     def set_expire_all(session: str) -> None:
         with REDIS_CONN.pipeline() as pipe:
             pipe.expire(utils.get_session(session), CDZSTAT_SESSION_AGE)
             pipe.expire(utils.get_node(session), CDZSTAT_SESSION_AGE)
             pipe.expire(utils.get_transition(session), CDZSTAT_SESSION_AGE)
             pipe.expire(utils.get_adjacency(session), CDZSTAT_SESSION_AGE)
+            pipe.expire(utils.get_ip_address(session), CDZSTAT_SESSION_AGE)
             pipe.execute()
 
     @staticmethod
@@ -169,6 +181,7 @@ class StoreService:
         session_data = REDIS_CONN.hgetall(utils.get_session(session))
         node_data = REDIS_CONN.hgetall(utils.get_node(session))
         adjacency_data = REDIS_CONN.hgetall(utils.get_adjacency(session))
+        ip_address = REDIS_CONN.hgetall(utils.get_ip_address(session))
         transition_data = REDIS_CONN.lrange(
             utils.get_transition(session), 0, -1)
 
@@ -176,7 +189,8 @@ class StoreService:
             'session': session_data,
             'node': node_data,
             'transition': transition_data,
-            'adjacency': adjacency_data
+            'adjacency': adjacency_data,
+            'ip_address': ip_address,
         })
 
 
@@ -240,9 +254,12 @@ class LowLevelService:
         self._resp = response
 
     def process(self) -> None:
-        session_key, s_data, d_data, navigate = self._collect_data()
+        collected_data = self._collect_data()
 
-        session_key = session_key[0]
+        navigate = collected_data.get('navigate')
+        d_data = collected_data.get('data_dynamic')
+
+        session_key = collected_data.get('session')
         new_session = False
 
         current_path = navigate.get('path')
@@ -258,23 +275,34 @@ class LowLevelService:
             )
         }
 
+        """
+        Checking - if the session exists in cookies and in the data store, 
+        if not, set flag 'new_session' True.
+        """
         if not session_key:
             new_session = True
         else:
             if not StoreService.session_exists(session_key):
                 new_session = True
-            else:
-                StoreService.set_expire_all(session_key)
 
         if new_session:
-            session_key = StoreService.add_session_data(s_data, session_key)
-            StoreService.set_expire_all(session_key)
+            session_key = StoreService.add_session_data(
+                {'user_agent': collected_data.get('user_agent')}, session_key
+            )
 
+        """
+        Checking - if the node exists in data store, if exist - update data
+        else add new node.
+        """
         if StoreService.check_node(session_key, current_path):
             StoreService.inc_node(session_key, current_path)
         else:
             StoreService.add_node(session_key, current_path)
 
+        """
+        Each time add a new transition to the data store. After add 
+        additional information. 
+        """
         transition = StoreService.add_transition(
             session_key, referer['path'], current_path
         )
@@ -282,7 +310,19 @@ class LowLevelService:
             session_key, transition, response_data, True
         )
 
+        """
+        Each time add information about adjacency to the data store
+        """
         StoreService.add_adjacency(session_key, current_path, transition)
+
+        """
+        Each time add information about ip address to the data store
+        """
+        StoreService.add_ip_address(
+            session_key, collected_data.get('ip_address'), transition
+        )
+
+        StoreService.set_expire_all(session_key)
 
         self._resp.set_cookie(
             CDZSTAT_REQUEST_NUM_NAME,
@@ -302,28 +342,32 @@ class LowLevelService:
             samesite=settings.SESSION_COOKIE_SAMESITE,
         )
 
+        """
+        At the end send notification for the SessionWorker  
+        """
         NotifyService.send_notify(CDZSTAT_QUEUE_SESSION, json.dumps({
             'from': 'low_level',
             CDZSTAT_SESSION_COOKIE_NAME: session_key,
             'transition': transition
         }))
 
-    def _collect_data(self) -> (str, dict, dict):
-        session = self._req.COOKIES.get(CDZSTAT_SESSION_COOKIE_NAME),
-        data_static = {
-            'ip_address': utils.get_ip(self._req),
+    def _collect_data(self) -> dict:
+        result = {
+            'session': self._req.COOKIES.get(CDZSTAT_SESSION_COOKIE_NAME),
             'user_agent': self._req.META['HTTP_USER_AGENT'],
+            'ip_address': utils.get_ip(self._req),
+            'data_dynamic': {
+                'status_code': self._resp.status_code,
+                'response_time': time.time() - self._req.start_time
+            },
+            'navigate': {
+                'host': self._req.META.get('HTTP_HOST'),
+                'path': self._req.path,
+                'referer': self._req.META.get('HTTP_REFERER') or '',
+            }
         }
-        data_dynamic = {
-            'status_code': self._resp.status_code,
-            'response_time': time.time() - self._req.start_time
-        }
-        navigate = {
-            'host': self._req.META.get('HTTP_HOST'),
-            'path': self._req.path,
-            'referer': self._req.META.get('HTTP_REFERER') or '',
-        }
-        return session, data_static, data_dynamic, navigate
+
+        return result
 
 
 class HeightLevelService:

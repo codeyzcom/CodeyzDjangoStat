@@ -53,3 +53,7 @@ def get_adjacency(key: str) -> str:
 
 def get_static(key: str) -> str:
     return f'static:{key}'
+
+
+def get_ip_address(key):
+    return f'ip_address:{key}'
