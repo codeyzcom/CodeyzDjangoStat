@@ -17,6 +17,8 @@ from .settings import (
     CDZSTAT_SESSION_AGE,
     CDZSTAT_REQUEST_NUM_NAME,
     CDZSTAT_QUEUE_SESSION,
+    CDZSTAT_PERMANENT_COOKIE_NAME,
+    CDZSTAT_PERMANENT_COOKIE_AGE,
 )
 from cdzstat import (
     models,
@@ -259,6 +261,9 @@ class LowLevelService:
         navigate = collected_data.get('navigate')
         d_data = collected_data.get('data_dynamic')
 
+        permanent_key = collected_data.get('permanent')
+        new_permanent = False
+
         session_key = collected_data.get('session')
         new_session = False
 
@@ -289,6 +294,18 @@ class LowLevelService:
             session_key = StoreService.add_session_data(
                 {'user_agent': collected_data.get('user_agent')}, session_key
             )
+
+        """
+        Checking - if the permananet key exists in cookies and add the 
+        data store
+        """
+        if not permanent_key:
+            new_permanent = True
+            permanent_key = str(uuid4())
+
+        StoreService.add_session_data(
+            {CDZSTAT_PERMANENT_COOKIE_NAME: permanent_key}, session_key
+        )
 
         """
         Checking - if the node exists in data store, if exist - update data
@@ -342,6 +359,16 @@ class LowLevelService:
             samesite=settings.SESSION_COOKIE_SAMESITE,
         )
 
+        if new_permanent:
+            self._resp.set_cookie(
+                CDZSTAT_PERMANENT_COOKIE_NAME,
+                permanent_key,
+                expires=CDZSTAT_PERMANENT_COOKIE_AGE,
+                path=settings.SESSION_COOKIE_PATH,
+                secure=settings.SESSION_COOKIE_SECURE or None,
+                samesite=settings.SESSION_COOKIE_SAMESITE,
+            )
+
         """
         At the end send notification for the SessionWorker  
         """
@@ -354,6 +381,7 @@ class LowLevelService:
     def _collect_data(self) -> dict:
         result = {
             'session': self._req.COOKIES.get(CDZSTAT_SESSION_COOKIE_NAME),
+            'permanent': self._req.COOKIES.get(CDZSTAT_PERMANENT_COOKIE_NAME),
             'user_agent': self._req.META['HTTP_USER_AGENT'],
             'ip_address': utils.get_ip(self._req),
             'data_dynamic': {
