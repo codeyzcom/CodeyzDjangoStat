@@ -258,26 +258,15 @@ class SessionData(TimestampMixin):
         null=True,
         blank=True
     )
-    screen_size = models.ManyToManyField(
-        'ScreenSize',
-    ),
-    node = models.ManyToManyField(
-        'Node',
-        through='Adjacency',
-        null=True,
-        blank=True
-    ),
     ip = models.ManyToManyField(
         'IpAddress',
         verbose_name='Ip address'
     )
     screen_size = models.ManyToManyField(
         'ScreenSize',
-        blank=True
     )
     window_size = models.ManyToManyField(
         'WindowSize',
-        blank=True
     )
     color_param = models.ForeignKey(
         'ColorParam',
@@ -302,3 +291,7 @@ class Adjacency(TimestampMixin):
         'Node',
         on_delete=models.CASCADE
     )
+    transition = models.ManyToManyField(
+        'Transition'
+    )
+
