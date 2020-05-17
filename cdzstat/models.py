@@ -99,7 +99,7 @@ class IpAddress(models.Model):
         return str(self.ip)
 
 
-class UserAgent(models.Model):
+class UserAgent(TimestampMixin):
     dt_create = models.DateTimeField(auto_now_add=True)
     is_bot = models.BooleanField(default=False)
     data = models.TextField(db_index=True, unique=True)
@@ -228,13 +228,13 @@ class SessionData(TimestampMixin):
         default=uuid.uuid4,
         editable=False
     )
-    ua = models.ForeignKey(
+    user_agent = models.ForeignKey(
         'UserAgent',
         on_delete=models.SET_NULL,
         null=True,
         verbose_name='User-Agent',
     )
-    browser_lang = models.ForeignKey(
+    user_lang = models.ForeignKey(
         'UserLang',
         on_delete=models.CASCADE,
         null=True,
