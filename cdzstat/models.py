@@ -257,6 +257,9 @@ class SessionData(TimestampMixin):
         on_delete=models.CASCADE,
         null=True,
         blank=True
+    )
+    screen_size = models.ManyToManyField(
+        'ScreenSize',
     ),
     node = models.ManyToManyField(
         'Node',

@@ -8,18 +8,9 @@ class TransitionInline(admin.TabularInline):
     extra = 0
     can_delete = False
     readonly_fields = (
-        'id',
-        'created_at',
-        'session',
-        'entry_point',
-        'host',
-        'path',
-        'referer',
-        'external_referer',
-        'status_code',
-        'response_time',
-        'processing_time',
-        'loading'
+        'id', 'created_at', 'updated_at', 'session', 'entry_point',
+        'host', 'path', 'referer', 'external_referer', 'status_code',
+        'response_time', 'processing_time', 'loading'
     )
 
 
@@ -29,7 +20,7 @@ class HostAdmin(admin.ModelAdmin):
 
 
 @admin.register(models.Node)
-class NodeAdmin(admin.ModelAdmin):
+class PathAdmin(admin.ModelAdmin):
     list_display = ('id', 'path')
 
 
@@ -54,8 +45,8 @@ class TransitionAdmin(admin.ModelAdmin):
     )
     list_filter = ('status_code',)
     readonly_fields = (
-        'id', 'created_at', 'session', 'entry_point', 'host',
-        'path', 'referer', 'external_referer', 'status_code', 'response_time',
+        'id', 'created_at', 'session', 'entry_point', 'host', 'path',
+        'referer', 'external_referer', 'status_code', 'response_time',
         'processing_time', 'loading'
     )
 
@@ -109,7 +100,7 @@ class SystemInfoAdmin(admin.ModelAdmin):
 
 @admin.register(models.SessionData)
 class SessionDataAdmin(admin.ModelAdmin):
-    list_display = ('key', 'created_at',)
+    list_display = ('key', 'created_at', 'updated_at')
     ordering = ('-created_at',)
     inlines = (TransitionInline,)
 
