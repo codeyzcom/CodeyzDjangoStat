@@ -81,6 +81,14 @@ class StoreService:
         return bool(REDIS_CONN.exists(utils.get_session(session)))
 
     @staticmethod
+    def get_session_all(session: str) -> dict:
+        return REDIS_CONN.hgetall(utils.get_session(session))
+
+    @staticmethod
+    def get_session_key(session: str, key: str) -> str:
+        return REDIS_CONN.hget(session, key)
+
+    @staticmethod
     def add_node(session: str, path: str):
         REDIS_CONN.hset(
             utils.get_node(session),
@@ -267,6 +275,7 @@ class LowLevelService:
         session_key = collected_data.get('session')
         new_session = False
 
+        current_host = navigate.get('host')
         current_path = navigate.get('path')
         current_referer = navigate.get('referer')
         referer = utils.split_url(current_referer)
@@ -375,6 +384,8 @@ class LowLevelService:
         NotifyService.send_notify(CDZSTAT_QUEUE_SESSION, json.dumps({
             'from': 'low_level',
             CDZSTAT_SESSION_COOKIE_NAME: session_key,
+            'host': current_host,
+            'node': current_path,
             'transition': transition
         }))
 
@@ -462,4 +473,106 @@ class DataHandlerService:
         self._data = data
 
     def process(self):
-        print(f'Process data with session key: {self._data}')
+        data = json.loads(self._data)
+        from_level = data.get('from')
+        session_key = data.get(CDZSTAT_SESSION_COOKIE_NAME)
+
+        print(data)
+
+        if from_level == 'low_level':
+            DataHandlerService._low_level_handler(data)
+        elif from_level == 'height_level':
+            DataHandlerService._height_level_handler(session_key)
+
+    @staticmethod
+    def _low_level_handler(data):
+        session_key = data.get(CDZSTAT_SESSION_COOKIE_NAME)
+        host = data.get('host')
+        node = data.get('node')
+        transition = data.get('transition')
+
+        transition_raw = StoreService.get_transition(session_key, transition)
+
+        session_obj, created = models.SessionData.objects.get_or_create(
+            key=session_key
+        )
+
+        host_obj, _ = models.Host.objects.get_or_create(host=host)
+
+        node_obj, _ = models.Node.objects.get_or_create(path=node)
+        node_obj.host.add(host_obj)
+        node_obj.save()
+
+        referer_obj, _ = models.Node.objects.get_or_create(
+            path=transition_raw.get('from')
+        )
+        referer_obj.host.add(host_obj)
+        referer_obj.save()
+
+        if created:
+            session_raw = StoreService.get_session_all(session_key)
+
+            DataHandlerService._set_user_agent(
+                session_key, session_raw.get('user_agent')
+            )
+
+        models.Transition.objects.create(
+            session=session_obj,
+            entry_point=transition_raw.get('entry_point'),
+            host=host_obj,
+            referer=referer_obj,
+            path=node_obj,
+            status_code=transition_raw.get('status_code'),
+            response_time=transition_raw.get('response_time')
+        )
+
+    @staticmethod
+    def _height_level_handler(session_key):
+
+        session_raw = StoreService.get_session_all(session_key)
+        DataHandlerService._set_user_lang(
+            session_key, session_raw.get('user_lang')
+        )
+
+        DataHandlerService._set_timezone(
+            session_key, session_raw.get('tz_info')
+        )
+
+        DataHandlerService._set_system_info(
+            session_key,
+            session_raw.get('platform'),
+            session_raw.get('os_version')
+        )
+
+        DataHandlerService._set_browser(
+            session_key,
+            session_raw.get('browser')
+        )
+
+    @staticmethod
+    def _set_user_agent(session: str, user_agent: str) -> None:
+        ua, _ = models.UserAgent.objects.update_or_create(data=user_agent)
+        models.SessionData.objects.filter(key=session).update(user_agent=ua)
+
+    @staticmethod
+    def _set_user_lang(session: str, user_lang: str) -> None:
+        ul, _ = models.UserLang.objects.update_or_create(data=user_lang)
+        models.SessionData.objects.filter(key=session).update(user_lang=ul)
+
+    @staticmethod
+    def _set_timezone(session: str, timezone):
+        tz, _ = models.TimeZone.objects.update_or_create(data=timezone)
+        models.SessionData.objects.filter(key=session).update(time_zone=tz)
+
+    @staticmethod
+    def _set_system_info(session: str, platform: str, os_version: str) -> None:
+        si, _ = models.SystemInfo.objects.update_or_create(
+            platform=platform, os_version=os_version
+        )
+        models.SessionData.objects.filter(key=session).update(system_info=si)
+
+    @staticmethod
+    def _set_browser(session: str, browser: str):
+        br, _ = models.Browser.objects.update_or_create(data=browser)
+        models.SessionData.objects.filter(key=session).update(browser=br)
+
