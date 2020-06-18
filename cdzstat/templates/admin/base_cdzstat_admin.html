@@ -1,0 +1,34 @@
+{% extends "admin/base_site.html" %}
+
+{% load static %}
+
+{% block title %}CodeyzDjangoStat - Admin {% endblock %}
+
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'cdzstat:admin_index' %}">CodeyzDjangoStat - Admin</a></h1>
+{% endblock %}
+
+
+{% block extrastyle %}
+    {{ block.super }}
+
+{% endblock %}
+
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        <a href="{% url 'admin:index' %}">Home</a> &rsaquo;
+        <a href="{% url 'cdzstat:admin_index' %}">CodeyzDjangoStat</a> &rsaquo;
+        Statistics
+    </div>
+{% endblock %}
+
+{% block content_title %}<h1></h1>{% endblock %}
+
+{% block content %}
+
+<div id="content-main">
+
+</div>
+
+{% endblock %}
