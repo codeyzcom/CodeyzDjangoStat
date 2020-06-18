@@ -3,24 +3,14 @@ from django.contrib import admin
 from cdzstat import models
 
 
-class RequestsInline(admin.TabularInline):
-    model = models.Request
+class TransitionInline(admin.TabularInline):
+    model = models.Transition
     extra = 0
     can_delete = False
     readonly_fields = (
-        'id',
-        'key',
-        'dt_create',
-        'session',
-        'entry_point',
-        'host',
-        'path',
-        'referer',
-        'external_referer',
-        'status_code',
-        'response_time',
-        'processing_time',
-        'loading'
+        'id', 'created_at', 'updated_at', 'session', 'entry_point',
+        'host', 'path', 'referer', 'external_referer', 'status_code',
+        'response_time', 'processing_time', 'loading'
     )
 
 
@@ -29,7 +19,7 @@ class HostAdmin(admin.ModelAdmin):
     list_display = ('id', 'host')
 
 
-@admin.register(models.Path)
+@admin.register(models.Node)
 class PathAdmin(admin.ModelAdmin):
     list_display = ('id', 'path')
 
@@ -47,26 +37,17 @@ class UserAgentAdmin(admin.ModelAdmin):
     list_filter = ('is_bot',)
 
 
-@admin.register(models.Request)
-class RequestAdmin(admin.ModelAdmin):
+@admin.register(models.Transition)
+class TransitionAdmin(admin.ModelAdmin):
     list_display = (
-        'id', 'path', 'status_code', 'response_time', 'dt_create', 'entry_point'
+        'id', 'path', 'status_code', 'response_time',
+        'created_at', 'entry_point'
     )
     list_filter = ('status_code',)
     readonly_fields = (
-        'id',
-        'key',
-        'dt_create',
-        'session',
-        'entry_point',
-        'host',
-        'path',
-        'referer',
-        'external_referer',
-        'status_code',
-        'response_time',
-        'processing_time',
-        'loading'
+        'id', 'created_at', 'session', 'entry_point', 'host', 'path',
+        'referer', 'external_referer', 'status_code', 'response_time',
+        'processing_time', 'loading'
     )
 
 
@@ -119,9 +100,9 @@ class SystemInfoAdmin(admin.ModelAdmin):
 
 @admin.register(models.SessionData)
 class SessionDataAdmin(admin.ModelAdmin):
-    list_display = ('key', 'dt_create', 'expire_date')
-    ordering = ('-dt_create',)
-    inlines = (RequestsInline,)
+    list_display = ('key', 'created_at', 'updated_at')
+    ordering = ('-created_at',)
+    inlines = (TransitionInline,)
 
 
 @admin.register(models.ExternalReferer)

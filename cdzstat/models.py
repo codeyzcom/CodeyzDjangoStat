@@ -5,6 +5,20 @@ from django.db import models
 from . import EXCEPTION_TYPE, utils
 
 
+class TimestampMixin(models.Model):
+    class Meta:
+        abstract = True
+
+    created_at = models.DateTimeField(
+        auto_now_add=True,
+        verbose_name='Время создания'
+    )
+    updated_at = models.DateTimeField(
+        auto_now=True,
+        verbose_name='Время последнего изменения'
+    )
+
+
 class TimeZoneInfo(models.Model):
     name = models.CharField(max_length=64)
     abbr = models.CharField(max_length=8, verbose_name='abbreviation')
@@ -85,7 +99,7 @@ class IpAddress(models.Model):
         return str(self.ip)
 
 
-class UserAgent(models.Model):
+class UserAgent(TimestampMixin):
     dt_create = models.DateTimeField(auto_now_add=True)
     is_bot = models.BooleanField(default=False)
     data = models.TextField(db_index=True, unique=True)
@@ -103,7 +117,7 @@ class SystemInfo(models.Model):
         return f'OS: {self.os_version}, PLATF: {self.platform}'
 
 
-class Path(models.Model):
+class Node(models.Model):
     id = models.BigAutoField(primary_key=True)
     dt_create = models.DateTimeField(auto_now_add=True)
     host = models.ManyToManyField('Host')
@@ -148,20 +162,13 @@ class ExceptionPath(models.Model):
         return f'{self.host}{self.path}'
 
 
-class Request(models.Model):
+class Transition(TimestampMixin):
     class Meta:
-        unique_together = ('session', 'key')
+        verbose_name = 'Transition'
+        verbose_name_plural = 'Transitions'
 
     id = models.BigAutoField(
         primary_key=True
-    )
-    key = models.CharField(
-        max_length=10,
-        default=utils.rand_symbols
-    )
-    dt_create = models.DateTimeField(
-        auto_now_add=True,
-        verbose_name='Date and Time create entry'
     )
     session = models.ForeignKey(
         'SessionData',
@@ -176,24 +183,30 @@ class Request(models.Model):
         on_delete=models.CASCADE,
         null=True
     )
-    path = models.ForeignKey(
-        'Path',
+    referer = models.ForeignKey(
+        'Node',
         on_delete=models.CASCADE,
         null=True,
-    )
-    referer = models.ForeignKey(
-        'Path',
-        on_delete=models.DO_NOTHING,
-        null=True,
         related_name='referer'
+    )
+    path = models.ForeignKey(
+        'Node',
+        on_delete=models.CASCADE,
+        null=True,
     )
     external_referer = models.ForeignKey(
         'ExternalReferer',
         on_delete=models.DO_NOTHING,
         null=True
     )
-    status_code = models.IntegerField()
-    response_time = models.FloatField()
+    status_code = models.IntegerField(
+        null=True,
+        blank=True
+    )
+    response_time = models.FloatField(
+        null=True,
+        blank=True
+    )
     processing_time = models.IntegerField(
         null=True,
         help_text='Measure in milliseconds. Start: domLoading End: domComplete'
@@ -208,30 +221,20 @@ class Request(models.Model):
         return str(self.id)
 
 
-class SessionData(models.Model):
+class SessionData(TimestampMixin):
     key = models.CharField(
         primary_key=True,
         max_length=36,
         default=uuid.uuid4,
         editable=False
     )
-    dt_create = models.DateTimeField(
-        auto_now_add=True
-    )
-    expire_date = models.DateTimeField()
-    ip = models.ForeignKey(
-        'IpAddress',
-        on_delete=models.CASCADE,
-        null=True,
-        verbose_name='Ip address'
-    )
-    ua = models.ForeignKey(
+    user_agent = models.ForeignKey(
         'UserAgent',
         on_delete=models.SET_NULL,
         null=True,
-        verbose_name='User-Agent'
+        verbose_name='User-Agent',
     )
-    browser_lang = models.ForeignKey(
+    user_lang = models.ForeignKey(
         'UserLang',
         on_delete=models.CASCADE,
         null=True,
@@ -239,24 +242,6 @@ class SessionData(models.Model):
     )
     time_zone = models.ForeignKey(
         'TimeZone',
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True
-    )
-    screen_size = models.ForeignKey(
-        'ScreenSize',
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True
-    )
-    window_size = models.ForeignKey(
-        'WindowSize',
-        on_delete=models.CASCADE,
-        null=True,
-        blank=True
-    )
-    color_param = models.ForeignKey(
-        'ColorParam',
         on_delete=models.CASCADE,
         null=True,
         blank=True
@@ -273,6 +258,40 @@ class SessionData(models.Model):
         null=True,
         blank=True
     )
+    ip = models.ManyToManyField(
+        'IpAddress',
+        verbose_name='Ip address'
+    )
+    screen_size = models.ManyToManyField(
+        'ScreenSize',
+    )
+    window_size = models.ManyToManyField(
+        'WindowSize',
+    )
+    color_param = models.ForeignKey(
+        'ColorParam',
+        on_delete=models.DO_NOTHING,
+        null=True,
+        blank=True
+    )
 
     def __str__(self):
         return self.key
+
+
+class Adjacency(TimestampMixin):
+    o = models.IntegerField(
+        verbose_name='Order'
+    )
+    session = models.ForeignKey(
+        'SessionData',
+        on_delete=models.CASCADE
+    )
+    node = models.ForeignKey(
+        'Node',
+        on_delete=models.CASCADE
+    )
+    transition = models.ManyToManyField(
+        'Transition'
+    )
+

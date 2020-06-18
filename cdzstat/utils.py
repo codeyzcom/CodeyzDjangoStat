@@ -43,8 +43,8 @@ def get_node(key: str) -> str:
     return f'node:{key}'
 
 
-def get_edge(key: str) -> str:
-    return f'edge:{key}'
+def get_transition(key: str) -> str:
+    return f'transition:{key}'
 
 
 def get_adjacency(key: str) -> str:
@@ -53,3 +53,7 @@ def get_adjacency(key: str) -> str:
 
 def get_static(key: str) -> str:
     return f'static:{key}'
+
+
+def get_ip_address(key):
+    return f'ip_address:{key}'
