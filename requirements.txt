@@ -1,6 +1,6 @@
 Django==3.0.7
 redis==3.5.0
-rq
+rq==1.4.2
 
 # Testing
 
