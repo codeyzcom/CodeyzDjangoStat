@@ -117,16 +117,6 @@ class SystemInfo(models.Model):
         return f'OS: {self.os_version}, PLATF: {self.platform}'
 
 
-class Node(models.Model):
-    id = models.BigAutoField(primary_key=True)
-    dt_create = models.DateTimeField(auto_now_add=True)
-    host = models.ManyToManyField('Host')
-    path = models.TextField(db_index=True)
-
-    def __str__(self):
-        return self.path[:100]
-
-
 class ExternalReferer(models.Model):
     id = models.BigAutoField(primary_key=True)
     dt_create = models.DateTimeField(auto_now_add=True)
@@ -160,6 +150,16 @@ class ExceptionPath(models.Model):
 
     def __str__(self):
         return f'{self.host}{self.path}'
+
+
+class Node(models.Model):
+    id = models.BigAutoField(primary_key=True)
+    dt_create = models.DateTimeField(auto_now_add=True)
+    host = models.ManyToManyField('Host')
+    path = models.TextField(db_index=True)
+
+    def __str__(self):
+        return self.path[:100]
 
 
 class Transition(TimestampMixin):
@@ -221,6 +221,23 @@ class Transition(TimestampMixin):
         return str(self.id)
 
 
+class Adjacency(TimestampMixin):
+    o = models.IntegerField(
+        verbose_name='Order'
+    )
+    session = models.ForeignKey(
+        'SessionData',
+        on_delete=models.CASCADE
+    )
+    node = models.ForeignKey(
+        'Node',
+        on_delete=models.CASCADE
+    )
+    transition = models.ManyToManyField(
+        'Transition'
+    )
+
+
 class SessionData(TimestampMixin):
     key = models.CharField(
         primary_key=True,
@@ -277,21 +294,3 @@ class SessionData(TimestampMixin):
 
     def __str__(self):
         return self.key
-
-
-class Adjacency(TimestampMixin):
-    o = models.IntegerField(
-        verbose_name='Order'
-    )
-    session = models.ForeignKey(
-        'SessionData',
-        on_delete=models.CASCADE
-    )
-    node = models.ForeignKey(
-        'Node',
-        on_delete=models.CASCADE
-    )
-    transition = models.ManyToManyField(
-        'Transition'
-    )
-
