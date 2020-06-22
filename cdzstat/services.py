@@ -89,6 +89,25 @@ class StoreService:
         return REDIS_CONN.hget(session, key)
 
     @staticmethod
+    def add_or_update_sessions_item(session_key: str, data: dict) -> None:
+        with REDIS_CONN.pipeline() as pipe:
+            if not pipe.hexists(utils.get_sessions(), session_key):
+                data['created_at'] = str(utils.get_dt())
+                data['count'] = 1
+                REDIS_CONN.hset(
+                    utils.get_sessions(), session_key, json.dumps(data)
+                )
+            else:
+                data = REDIS_CONN.hgetall(utils.get_sessions())
+                dict_data = json.loads(data.get(session_key))
+                dict_data['count'] += 1
+                dict_data['updated_at'] = str(utils.get_dt())
+                REDIS_CONN.hset(
+                    utils.get_sessions(), session_key, json.dumps(dict_data)
+                )
+            pipe.execute()
+
+    @staticmethod
     def add_node(session: str, path: str):
         REDIS_CONN.hset(
             utils.get_node(session),
@@ -303,6 +322,9 @@ class LowLevelService:
             session_key = StoreService.add_session_data(
                 {'user_agent': collected_data.get('user_agent')}, session_key
             )
+            StoreService.add_or_update_sessions_item(
+                session_key, {'low_level': True, 'height_level': False}
+            )
 
         """
         Checking - if the permananet key exists in cookies and add the 
@@ -441,6 +463,10 @@ class HeightLevelService:
         if is_anonymous:
             # ToDo anonymous
             pass
+        else:
+            StoreService.add_or_update_sessions_item(
+                session_key, {'low_level': True, 'height_level': True}
+            )
 
         StoreService.add_session_data(param, session_key)
 
@@ -575,4 +601,3 @@ class DataHandlerService:
     def _set_browser(session: str, browser: str):
         br, _ = models.Browser.objects.update_or_create(data=browser)
         models.SessionData.objects.filter(key=session).update(browser=br)
-
