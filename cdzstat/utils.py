@@ -31,6 +31,10 @@ def get_dt():
     return localtime().today()
 
 
+def get_sessions() -> str:
+    return 'session_list'
+
+
 def get_session(key: str) -> str:
     return f'session:{key}'
 
