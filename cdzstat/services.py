@@ -23,6 +23,7 @@ from .settings import (
 from cdzstat import (
     models,
     utils,
+    handlers,
 )
 
 
@@ -34,7 +35,6 @@ class ServiceUtils:
     @staticmethod
     def initialize_data():
         hosts = models.Host.objects.values_list('host', flat=True)
-
         REDIS_CONN.delete(utils.get_static('hosts'))
         for host in hosts:
             REDIS_CONN.sadd(utils.get_static('hosts'), host)
@@ -576,3 +576,35 @@ class DataHandlerService:
         br, _ = models.Browser.objects.update_or_create(data=browser)
         models.SessionData.objects.filter(key=session).update(browser=br)
 
+
+class CollectorService:
+
+    def __init__(self, request, response=None) -> None:
+        self._req = request
+        self._resp = response
+        self.all_handlers = []
+
+    def low_level_collector(self):
+        self.all_handlers.append(handlers.SessionHandler)
+        self.all_handlers.append(handlers.UserPermanentAttributeHandler)
+        self.all_handlers.append(handlers.IpAddressHandler)
+
+    def height_level_collector(self):
+        self.all_handlers.append(handlers.SessionHandler)
+        # ToDo Add other handlers
+
+    def process(self) -> None:
+
+        all_handlers = sorted(self.all_handlers, key=lambda k: k.priority)
+
+        for handler in all_handlers:
+            try:
+
+                obj = handler(self._req, self._resp)
+                if not obj.preprocessing():
+                    # ToDo Added Logging
+                    continue
+                obj.process()
+            except Exception as e:
+                # ToDo Added Logging
+                print(e)

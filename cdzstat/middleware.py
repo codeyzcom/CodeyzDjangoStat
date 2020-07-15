@@ -3,6 +3,7 @@ import time
 from .services import (
     ExceptionService,
     LowLevelService,
+    CollectorService,
 )
 
 
@@ -17,8 +18,9 @@ class StatCollector:
 
         exc_srv = ExceptionService(request)
         if not exc_srv.check():
-            lls = LowLevelService(request, response)
-            lls.process()
+            collector_service = CollectorService(request, response)
+            collector_service.low_level_collector()
+            collector_service.process()
         else:
             print(
                 f'The path {request.path} will not be processed, '
