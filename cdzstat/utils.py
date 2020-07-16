@@ -1,8 +1,9 @@
 import random
 import string
+from datetime import datetime
 from urllib.parse import urlparse
 
-from django.utils.timezone import localtime
+from django.utils import timezone
 
 
 def get_ip(request) -> str:
@@ -28,7 +29,7 @@ def rand_symbols(length: int = 10) -> str:
 
 
 def get_dt():
-    return localtime().today()
+    return timezone.localtime().today()
 
 
 def get_session(key: str) -> str:
@@ -57,3 +58,7 @@ def get_static(key: str) -> str:
 
 def get_ip_address(key):
     return f'ip_address:{key}'
+
+
+def get_gc() -> str:
+    return 'garbage_collector:'

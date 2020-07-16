@@ -27,7 +27,6 @@ from cdzstat import (
     handlers,
 )
 
-
 logger = logging.getLogger()
 
 
@@ -610,4 +609,8 @@ class CollectorService:
                     continue
                 obj.process()
             except Exception as e:
-                logger.error(e)
+                logger.error(f'Error: {e}')
+
+
+class GarbageCollectorService:
+    pass
