@@ -1,6 +1,7 @@
 import json
 import re
 import time
+import logging
 from uuid import uuid4
 
 from django.conf import settings
@@ -25,6 +26,9 @@ from cdzstat import (
     utils,
     handlers,
 )
+
+
+logger = logging.getLogger()
 
 
 class ServiceUtils:
@@ -591,7 +595,6 @@ class CollectorService:
 
     def height_level_collector(self):
         self.all_handlers.append(handlers.SessionHandler)
-        # ToDo Add other handlers
 
     def process(self) -> None:
 
@@ -599,12 +602,12 @@ class CollectorService:
 
         for handler in all_handlers:
             try:
-
                 obj = handler(self._req, self._resp)
                 if not obj.preprocessing():
-                    # ToDo Added Logging
+                    logger.warning(
+                        f'Handler.process() for {obj.__class__} will be skip!'
+                    )
                     continue
                 obj.process()
             except Exception as e:
-                # ToDo Added Logging
-                print(e)
+                logger.error(e)
