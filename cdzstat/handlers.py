@@ -105,9 +105,14 @@ class UserPermanentAttributeHandler(RequestRequestAbstractHandler):
         )
 
 
-
 class IpAddressHandler(RequestRequestAbstractHandler):
     priority = 20
 
     def process(self):
-        print(f'IpAddress Handler: {self.priority}')
+        ip_address = utils.get_ip(self.ctx.get('request'))
+        ip_key = utils.get_ip_address(self.ctx.get('session_key'))
+
+        added = bool(REDIS_CONN.hsetnx(ip_key, ip_address, 1))
+
+        if not added:
+            REDIS_CONN.hincrby(ip_key, ip_address)

@@ -1,6 +1,5 @@
 import random
 import string
-from datetime import datetime
 from urllib.parse import urlparse
 
 from django.utils import timezone
