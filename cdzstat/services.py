@@ -6,13 +6,13 @@ from uuid import uuid4
 
 from django.conf import settings
 
-from . import (
+from cdzstat import (
     USER_AGENT_CACHE,
     EXCEPTION_CACHE_REGEX,
     EXCEPTION_CACHE_DIRECT,
     REDIS_CONN,
 )
-from .settings import (
+from cdzstat.settings import (
     CDZSTAT_IGNORE_BOTS,
     CDZSTAT_SESSION_COOKIE_NAME,
     CDZSTAT_SESSION_AGE,
@@ -591,6 +591,7 @@ class CollectorService:
         self.all_handlers.append(handlers.SessionHandler)
         self.all_handlers.append(handlers.UserPermanentAttributeHandler)
         self.all_handlers.append(handlers.IpAddressHandler)
+        self.all_handlers.append(handlers.UserAgentHandler)
 
     def height_level_collector(self):
         self.all_handlers.append(handlers.SessionHandler)

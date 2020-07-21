@@ -18,9 +18,9 @@ class Handler(ABC):
         pass
 
 
-class RequestRequestAbstractHandler(Handler):
+class RequestResponseAbstractHandler(Handler):
     priority = 100
-    ctx = {'new_session': True}
+    ctx = {'new_session': True, 'session_key': None, 'state': True}
 
     def __init__(self, request, response):
         self.ctx['request'] = request
@@ -37,7 +37,7 @@ class RequestRequestAbstractHandler(Handler):
         print('Default behaviour')
 
 
-class SessionHandler(RequestRequestAbstractHandler):
+class SessionHandler(RequestResponseAbstractHandler):
     priority = 10
     read_only = False
 
@@ -68,7 +68,7 @@ class SessionHandler(RequestRequestAbstractHandler):
                     str(utils.get_dt())
                 )
                 pipe.expire(
-                    utils.get_session(session_key), CDZSTAT_SESSION_AGE
+                    utils.get_session(session_key), 30
                 )
                 pipe.execute()
         else:
@@ -85,11 +85,10 @@ class SessionHandler(RequestRequestAbstractHandler):
                 secure=settings.SESSION_COOKIE_SECURE or None,
                 samesite=settings.SESSION_COOKIE_SAMESITE,
             )
-
         self.ctx['session_key'] = session_key
 
 
-class UserPermanentAttributeHandler(RequestRequestAbstractHandler):
+class UserPermanentAttributeHandler(RequestResponseAbstractHandler):
     priority = 15
     read_only = False
 
@@ -105,7 +104,7 @@ class UserPermanentAttributeHandler(RequestRequestAbstractHandler):
         )
 
 
-class IpAddressHandler(RequestRequestAbstractHandler):
+class IpAddressHandler(RequestResponseAbstractHandler):
     priority = 20
 
     def process(self):
@@ -116,3 +115,38 @@ class IpAddressHandler(RequestRequestAbstractHandler):
 
         if not added:
             REDIS_CONN.hincrby(ip_key, ip_address)
+
+
+class UserAgentHandler(RequestResponseAbstractHandler):
+    priority = 25
+    user_agent = None
+
+    def preprocessing(self):
+        self.user_agent = self.ctx.get('request').META.get('HTTP_USER_AGENT')
+        if self.user_agent is not None:
+            return True
+        return False
+
+    def process(self):
+        REDIS_CONN.hset(
+            utils.get_session(self.ctx.get('session_key')),
+            'user_agent',
+            self.user_agent
+        )
+        self.ctx['user_agent'] = self.user_agent
+
+
+class NodeHandler(RequestResponseAbstractHandler):
+    priority = 30
+    host: str
+    path: str
+    referer: str
+
+    def preprocessing(self):
+        self.host = self.ctx.get('request').META.get('HTTP_HOST')
+        self.path = self.ctx.get('request').path
+        self.referer = self.ctx.get('request').META.get('HTTP_REFERER') or ''
+        return True
+
+    def process(self):
+        node = self.ctx.get('request')
