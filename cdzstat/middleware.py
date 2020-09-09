@@ -1,6 +1,6 @@
 import time
 
-from .services import LowLevelService
+from cdzstat.poller import Poller
 
 
 class StatCollector:
@@ -12,7 +12,7 @@ class StatCollector:
         request.start_time = time.time()
         response = self.get_response(request)
 
-        lls = LowLevelService(request, response)
-        lls.process()
+        poller = Poller(request, response)
+        poller.execute()
 
         return response
