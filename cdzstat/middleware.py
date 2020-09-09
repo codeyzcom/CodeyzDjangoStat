@@ -1,9 +1,6 @@
 import time
 
-from .services import (
-    ExceptionService,
-    LowLevelService,
-)
+from .services import LowLevelService
 
 
 class StatCollector:
@@ -15,14 +12,7 @@ class StatCollector:
         request.start_time = time.time()
         response = self.get_response(request)
 
-        exc_srv = ExceptionService(request)
-        if not exc_srv.check():
-            lls = LowLevelService(request, response)
-            lls.process()
-        else:
-            print(
-                f'The path {request.path} will not be processed, '
-                f'as it is added to the exceptions!'
-            )
+        lls = LowLevelService(request, response)
+        lls.process()
 
         return response

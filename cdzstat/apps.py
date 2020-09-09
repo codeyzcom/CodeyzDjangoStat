@@ -8,4 +8,5 @@ class CdzstatConfig(AppConfig):
         from . import signals  # noqa
 
         from cdzstat.services import ServiceUtils
-        ServiceUtils.initialize_data()
+        ServiceUtils.initialize_application()
+        #ServiceUtils.initialize_data()
