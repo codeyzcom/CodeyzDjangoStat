@@ -67,3 +67,24 @@ class HttpHeadersHandler(RequestResponseHandler):
         self.ctx['accepted_types'] = [
             (x.main_type, x.sub_type) for x in request.accepted_types
         ]
+
+
+class NodeHandler(RequestResponseHandler):
+    priority = 35
+
+    def process(self):
+        pass
+
+
+class TransitionHandler(RequestResponseHandler):
+    priority = 40
+
+    def process(self):
+        pass
+
+
+class AdjacencyHandler(RequestResponseHandler):
+    priority = 40
+
+    def process(self):
+        pass
