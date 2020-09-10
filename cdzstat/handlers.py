@@ -40,7 +40,13 @@ class IpAddressHandler(RequestResponseHandler):
     priority = 20
 
     def process(self):
-        self.ctx['ip_address'] = utils.get_ip(self.ctx.get('request'))
+        request = self.ctx.get('request')
+        x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
+        if x_forwarded_for:
+            ip = x_forwarded_for.split(',')[0]
+        else:
+            ip = request.META.get('REMOTE_ADDR')
+        self.ctx['ip_address'] = ip
 
 
 class UserAgentHandler(RequestResponseHandler):

@@ -5,15 +5,6 @@ from urllib.parse import urlparse
 from django.utils.timezone import localtime
 
 
-def get_ip(request) -> str:
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0]
-    else:
-        ip = request.META.get('REMOTE_ADDR')
-    return ip
-
-
 def split_url(url: str) -> dict:
     full = urlparse(url)
     return {'host': full.netloc, 'path': full.path}
