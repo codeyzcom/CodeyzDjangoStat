@@ -3,11 +3,14 @@ from cdzstat import utils
 
 class RequestResponseHandler:
     priority = 100
-    ctx = {'new_session': True, 'session_key': None}
+    ctx = {'state': True, 'new_session': True, 'session_key': None}
 
     def __init__(self, request, response):
         self.ctx['request'] = request
         self.ctx['response'] = response
+
+    def check_state(self) -> bool:
+        return self.ctx.get('state')
 
     def preprocessing(self):
         """
@@ -24,21 +27,19 @@ class SessionHandler(RequestResponseHandler):
     priority = 10
 
     def process(self):
-        print('Session handler')
-
+        pass
 
 class PermanentSessionHandler(RequestResponseHandler):
     priority = 15
 
     def process(self):
-        print('PermanentSessionHandler')
+        pass
 
 
 class IpAddressHandler(RequestResponseHandler):
     priority = 20
 
     def process(self):
-        print('IpAddressHandler')
         self.ctx['ip_address'] = utils.get_ip(self.ctx.get('request'))
 
 

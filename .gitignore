@@ -5,6 +5,7 @@ __pycache__/
 
 config/*
 manage.py
+main
 
 # C extensions
 *.so
