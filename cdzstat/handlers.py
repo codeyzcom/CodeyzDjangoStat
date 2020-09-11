@@ -1,11 +1,12 @@
-from cdzstat import utils
+import json
+
+from .settings import CDZSTAT_SCRIPT_ID
 
 
 class RequestResponseHandler:
-    priority = 100
     ctx = {
-        'state': True, 'new_session': True, 'session_key': None,
-    }
+            'state': True, 'new_session': True, 'session_key': None,
+        }
 
     def __init__(self, request, response):
         self.ctx['request'] = request
@@ -45,6 +46,25 @@ class PermanentSessionHandler(RequestResponseHandler):
     def process(self):
         pass
 
+
+class ScriptInitHandler(RequestResponseHandler):
+    priority = 5
+
+    def process(self):
+        request = self.ctx.get('request')
+
+        if not request.body:
+            self.ctx['state'] = False
+            return
+
+        payload = json.loads(request.body)
+        
+        if str(payload.get('cdzscript')) != CDZSTAT_SCRIPT_ID:
+            self.ctx['state'] = False
+            return
+
+        self.ctx['payload'] = payload
+    
 
 class IpAddressHandler(RequestResponseHandler):
     priority = 20
@@ -111,7 +131,7 @@ class TransitionScriptHandler(RequestResponseHandler):
 
     def process(self):
         request = self.ctx.get('request')
-
+        
         self.ctx['transition'] = {
             'to': 'TO cdz_stat.js',
             'from': 'from cdz_stat.js'
@@ -120,6 +140,13 @@ class TransitionScriptHandler(RequestResponseHandler):
 
 class AdjacencyHandler(RequestResponseHandler):
     priority = 50
+
+    def process(self):
+        pass
+
+
+class AdvancedParamScriptHandler(RequestResponseHandler):
+    priority = 55
 
     def process(self):
         pass
