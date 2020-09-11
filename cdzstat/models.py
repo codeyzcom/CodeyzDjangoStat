@@ -2,8 +2,6 @@ import uuid
 
 from django.db import models
 
-from . import EXCEPTION_TYPE, utils
-
 
 class TimestampMixin(models.Model):
     class Meta:

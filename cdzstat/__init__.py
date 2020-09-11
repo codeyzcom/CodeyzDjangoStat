@@ -8,11 +8,6 @@ from cdzstat.settings import (
 
 default_app_config = 'cdzstat.apps.CdzstatConfig'
 
-EXCEPTION_TYPE = (
-    ('regex', 'By regular expression'),
-    ('match', 'Direct match')
-)
-
 HTTP_STATUSES = (
     ('200', '200: OK'),
     ('301', '301: Moved Permanently'),
