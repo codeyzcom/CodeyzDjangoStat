@@ -60,4 +60,5 @@ class Poller:
             handlers.NodeScriptHandler,
             handlers.TransitionScriptHandler,
             handlers.AdjacencyHandler,
+            handlers.AdvancedParamScriptHandler,
         ]

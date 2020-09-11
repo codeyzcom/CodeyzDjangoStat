@@ -27,7 +27,14 @@ class RequestResponseHandler:
 
 
 class StoreHandler(RequestResponseHandler):
-    priority = 99999
+    priority = 9999
+
+    def process(self):
+        pass
+
+
+class FinalScript(RequestResponseHandler):
+    priority = 9999
 
     def process(self):
         pass
@@ -149,4 +156,25 @@ class AdvancedParamScriptHandler(RequestResponseHandler):
     priority = 55
 
     def process(self):
-        pass
+        params = self.ctx.get('payload').get('params')
+        view_params = {
+            'screen_width': params.get('screen_width'),
+            'screen_height': params.get('screen_height'),
+            'window_width': params.get('window_width'),
+            'window_height': params.get('window_height'),
+            'screen_color_depth': params.get('screen_color_depth'),
+            'screen_pixel_depth': params.get('screen_pixel_depth'),
+        }
+        self.ctx.update(view_params)
+
+
+class SpeedScriptHandler(RequestResponseHandler):
+    priority = 60
+
+    def process(self):
+        params = self.ctx.get('payload').get('speed')
+        speed_params = {
+            'processing': params.get('processing'),
+            'loadingTime': params.get('loadingTime'),
+        }
+        self.ctx.update(speed_params)

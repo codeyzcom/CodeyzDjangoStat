@@ -156,7 +156,7 @@ window.onload = function () {
     let speed = measure_speed();
     sendDataPost({
         'cdzscript': 20200914879915,
-        'data': data, 'param': param, 'speed': speed
+        'data': data, 'params': param, 'speed': speed
     })
 }
 
