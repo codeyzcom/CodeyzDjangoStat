@@ -3,7 +3,9 @@ from cdzstat import utils
 
 class RequestResponseHandler:
     priority = 100
-    ctx = {'state': True, 'new_session': True, 'session_key': None}
+    ctx = {
+        'state': True, 'new_session': True, 'session_key': None,
+    }
 
     def __init__(self, request, response):
         self.ctx['request'] = request
@@ -23,11 +25,19 @@ class RequestResponseHandler:
         raise NotImplementedError
 
 
+class StoreHandler(RequestResponseHandler):
+    priority = 99999
+
+    def process(self):
+        pass
+
+
 class SessionHandler(RequestResponseHandler):
     priority = 10
 
     def process(self):
         pass
+
 
 class PermanentSessionHandler(RequestResponseHandler):
     priority = 15
@@ -69,22 +79,47 @@ class HttpHeadersHandler(RequestResponseHandler):
         ]
 
 
-class NodeHandler(RequestResponseHandler):
-    priority = 35
-
-    def process(self):
-        pass
-
-
-class TransitionHandler(RequestResponseHandler):
+class NodeNativeHandler(RequestResponseHandler):
     priority = 40
 
     def process(self):
-        pass
+        request = self.ctx.get('request')
+        self.ctx['node'] = request.path_info
+
+
+class NodeScriptHandler(RequestResponseHandler):
+    priority = 40
+
+    def process(self):
+        self.ctx['node'] = 'NODE cdz_scipt.js'
+
+
+class TransitionNativeHandler(RequestResponseHandler):
+    priority = 45
+
+    def process(self):
+        request = self.ctx.get('request')
+
+        self.ctx['transition'] = {
+            'to': self.ctx.get('node'),
+            'from': request.META.get('HTTP_REFERER')
+        }
+
+
+class TransitionScriptHandler(RequestResponseHandler):
+    priority = 45
+
+    def process(self):
+        request = self.ctx.get('request')
+
+        self.ctx['transition'] = {
+            'to': 'TO cdz_stat.js',
+            'from': 'from cdz_stat.js'
+        }
 
 
 class AdjacencyHandler(RequestResponseHandler):
-    priority = 40
+    priority = 50
 
     def process(self):
         pass

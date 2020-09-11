@@ -13,7 +13,7 @@ class Poller:
         self.handler_set = []
 
     def execute(self):
-        if self._req.path == '/cdzstat/collect_statistic':
+        if self._req.path_info == '/cdzstat/collect_statistic':
             self.handler_set = self._prepare_cdzstat_js_script_handlers()
         else:
             self.handler_set = self._prepare_std_handlers()
@@ -32,20 +32,31 @@ class Poller:
             else:
                 logger.warning('Stop perform!')
                 break
+        print('\n')
+        for k, v in sorted_handlers[0].ctx.items():
+            print(f'{k}: {v}')
 
     def _prepare_std_handlers(self) -> list:
         return [
+            handlers.StoreHandler,
             handlers.SessionHandler,
             handlers.PermanentSessionHandler,
             handlers.IpAddressHandler,
             handlers.UserAgentHandler,
             handlers.HttpHeadersHandler,
+            handlers.NodeNativeHandler,
+            handlers.TransitionNativeHandler,
+            handlers.AdjacencyHandler,
         ]
 
     def _prepare_cdzstat_js_script_handlers(self) -> list:
         return [
+            handlers.StoreHandler,
             handlers.SessionHandler,
             handlers.PermanentSessionHandler,
             handlers.IpAddressHandler,
             handlers.UserAgentHandler,
+            handlers.NodeScriptHandler,
+            handlers.TransitionScriptHandler,
+            handlers.AdjacencyHandler,
         ]

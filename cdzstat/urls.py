@@ -4,5 +4,5 @@ from cdzstat import views
 
 app_name = 'cdzstat'
 urlpatterns = [
-    path('cdzstat/collect_statistic', views.collector, name='col_stat')
+    path('cdzstat/collect_statistic', views.dummy_view, name='dummy'),
 ]
