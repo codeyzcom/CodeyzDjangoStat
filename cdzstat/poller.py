@@ -51,6 +51,7 @@ class Poller:
 
     def _prepare_cdzstat_js_script_handlers(self) -> list:
         return [
+            handlers.ScriptInitHandler,
             handlers.StoreHandler,
             handlers.SessionHandler,
             handlers.PermanentSessionHandler,
