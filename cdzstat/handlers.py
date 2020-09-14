@@ -1,12 +1,24 @@
 import json
+from uuid import uuid4
 
-from cdzstat.settings import CDZSTAT_SCRIPT_ID
+from django.conf import settings
+
+from cdzstat import (
+    REDIS_CONN,
+    ACTIVE_SESSIONS,
+)
+from cdzstat.settings import (
+    CDZSTAT_SCRIPT_ID,
+    CDZSTAT_SESSION_COOKIE_NAME,
+    CDZSTAT_REQUEST_NUM_NAME,
+    CDZSTAT_SESSION_AGE,
+)
 
 
 class RequestResponseHandler:
     ctx = {
-            'state': True, 'new_session': True, 'session_key': None,
-        }
+        'state': True, 'new_session': True, 'session_key': None,
+    }
 
     def __init__(self, request, response):
         self.ctx['request'] = request
@@ -35,9 +47,32 @@ class StoreHandler(RequestResponseHandler):
 
 class SessionHandler(RequestResponseHandler):
     priority = 10
+    read_only = True
 
     def process(self):
-        pass
+        request = self.ctx.get('request')
+        response = self.ctx.get('response')
+
+        cookies = request.COOKIES
+
+        if cookies:
+            session_key = cookies.get(CDZSTAT_SESSION_COOKIE_NAME)
+            if session_key:
+                if bool(REDIS_CONN.hexists(ACTIVE_SESSIONS, session_key)):
+                    self.ctx['new_session'] = False
+
+        if self.ctx.get('new_session') and not self.read_only:
+            session_key = str(uuid4())
+            REDIS_CONN.hset(ACTIVE_SESSIONS, key=session_key, value=1)
+
+            response.set_cookie(
+                CDZSTAT_SESSION_COOKIE_NAME,
+                session_key,
+                expires=CDZSTAT_SESSION_AGE,
+                path=settings.SESSION_COOKIE_PATH,
+                secure=settings.SESSION_COOKIE_SECURE or None,
+                samesite=settings.SESSION_COOKIE_SAMESITE,
+            )
 
 
 class PermanentSessionHandler(RequestResponseHandler):
@@ -58,13 +93,13 @@ class ScriptInitHandler(RequestResponseHandler):
             return
 
         payload = json.loads(request.body)
-        
+
         if str(payload.get('cdzscript')) != CDZSTAT_SCRIPT_ID:
             self.ctx['state'] = False
             return
 
         self.ctx['payload'] = payload
-    
+
 
 class IpAddressHandler(RequestResponseHandler):
     priority = 20
@@ -131,7 +166,7 @@ class TransitionScriptHandler(RequestResponseHandler):
 
     def process(self):
         request = self.ctx.get('request')
-        
+
         self.ctx['transition'] = {
             'to': 'TO cdz_stat.js',
             'from': 'from cdz_stat.js'

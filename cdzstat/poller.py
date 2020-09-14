@@ -33,8 +33,6 @@ class Poller:
                 logger.warning('Stop perform!')
                 break
         print('\n')
-        for k, v in sorted_handlers[0].ctx.items():
-            print(f'{k}: {v}')
 
     def _prepare_std_handlers(self) -> list:
         return [

@@ -25,3 +25,7 @@ REDIS_CONN = Redis(
     password=CDZSTAT_REDIS_PASS,
     decode_responses=True
 )
+
+
+## Constants
+ACTIVE_SESSIONS = 'active_sessions'
