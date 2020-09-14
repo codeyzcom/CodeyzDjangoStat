@@ -6,6 +6,7 @@ from django.conf import settings
 from cdzstat import (
     REDIS_CONN,
     ACTIVE_SESSIONS,
+    utils,
 )
 from cdzstat.settings import (
     CDZSTAT_SCRIPT_ID,
@@ -16,9 +17,7 @@ from cdzstat.settings import (
 
 
 class RequestResponseHandler:
-    ctx = {
-        'state': True, 'new_session': True, 'session_key': None,
-    }
+    ctx = {'state': True}
 
     def __init__(self, request, response):
         self.ctx['request'] = request
@@ -45,38 +44,88 @@ class StoreHandler(RequestResponseHandler):
         pass
 
 
-class SessionHandler(RequestResponseHandler):
+class SessionGetterHandler(RequestResponseHandler):
     priority = 10
-    read_only = True
 
     def process(self):
         request = self.ctx.get('request')
-        response = self.ctx.get('response')
 
         cookies = request.COOKIES
 
         if cookies:
             session_key = cookies.get(CDZSTAT_SESSION_COOKIE_NAME)
-            if session_key:
-                if bool(REDIS_CONN.hexists(ACTIVE_SESSIONS, session_key)):
-                    self.ctx['new_session'] = False
+            if session_key and bool(REDIS_CONN.hexists(ACTIVE_SESSIONS, session_key)):
+                self.ctx['new_session'] = False
+                self.ctx['session_key'] = session_key
+            else:
+                self.ctx['new_session'] = True
+                self.ctx['session_key'] = None
 
-        if self.ctx.get('new_session') and not self.read_only:
-            session_key = str(uuid4())
-            REDIS_CONN.hset(ACTIVE_SESSIONS, key=session_key, value=1)
 
-            response.set_cookie(
-                CDZSTAT_SESSION_COOKIE_NAME,
-                session_key,
-                expires=CDZSTAT_SESSION_AGE,
-                path=settings.SESSION_COOKIE_PATH,
-                secure=settings.SESSION_COOKIE_SECURE or None,
-                samesite=settings.SESSION_COOKIE_SAMESITE,
-            )
+class SessionSetterHandler(RequestResponseHandler):
+    priority = 15
+
+    def preprocessing(self):
+        return self.ctx.get('new_session')
+
+    def process(self):
+        response = self.ctx.get('response')
+
+        encoder = utils.DateTimeEncoder()
+
+        session_key = str(uuid4())
+        value = json.dumps({
+            'count': 1,
+            'created_at': json.dumps(utils.get_dt(), default=str),
+            'updated_at': json.dumps(utils.get_dt(), default=str),
+        })
+
+        REDIS_CONN.hset(ACTIVE_SESSIONS, key=session_key, value=value)
+
+        response.set_cookie(
+            CDZSTAT_SESSION_COOKIE_NAME,
+            session_key,
+            expires=CDZSTAT_SESSION_AGE,
+            path=settings.SESSION_COOKIE_PATH,
+            secure=settings.SESSION_COOKIE_SECURE or None,
+            samesite=settings.SESSION_COOKIE_SAMESITE,
+        )
+
+
+class SessionUpdateHandler(RequestResponseHandler):
+    priority = 15
+
+    def preprocessing(self):
+        if not self.ctx.get('new_session') and self.ctx.get('session_key'):
+            return True
+
+    def process(self):
+        response = self.ctx.get('response')
+
+        session_key = self.ctx.get('session_key')
+
+        raw_data = REDIS_CONN.hget(ACTIVE_SESSIONS, session_key)
+        data = json.loads(raw_data)
+
+        data['count'] = data.get('count', 1) + 1
+        data['updated_at'] = json.dumps(utils.get_dt(), default=str)
+
+        value = json.dumps(data)
+
+        REDIS_CONN.hset(ACTIVE_SESSIONS, session_key, value=value)
+
+        response.set_cookie(
+            CDZSTAT_SESSION_COOKIE_NAME,
+            session_key,
+            expires=CDZSTAT_SESSION_AGE,
+            path=settings.SESSION_COOKIE_PATH,
+            secure=settings.SESSION_COOKIE_SECURE or None,
+            samesite=settings.SESSION_COOKIE_SAMESITE,
+        )
 
 
 class PermanentSessionHandler(RequestResponseHandler):
-    priority = 15
+    priority = 20
 
     def process(self):
         pass
@@ -102,7 +151,7 @@ class ScriptInitHandler(RequestResponseHandler):
 
 
 class IpAddressHandler(RequestResponseHandler):
-    priority = 20
+    priority = 25
 
     def process(self):
         request = self.ctx.get('request')
@@ -115,7 +164,7 @@ class IpAddressHandler(RequestResponseHandler):
 
 
 class UserAgentHandler(RequestResponseHandler):
-    priority = 25
+    priority = 30
 
     def process(self):
         self.ctx['user_agent'] = self.ctx.get(
@@ -124,7 +173,7 @@ class UserAgentHandler(RequestResponseHandler):
 
 
 class HttpHeadersHandler(RequestResponseHandler):
-    priority = 30
+    priority = 35
 
     def process(self):
         request = self.ctx.get('request')
