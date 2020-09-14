@@ -1,6 +1,6 @@
 import json
 
-from .settings import CDZSTAT_SCRIPT_ID
+from cdzstat.settings import CDZSTAT_SCRIPT_ID
 
 
 class RequestResponseHandler:
@@ -27,13 +27,6 @@ class RequestResponseHandler:
 
 
 class StoreHandler(RequestResponseHandler):
-    priority = 9999
-
-    def process(self):
-        pass
-
-
-class FinalScript(RequestResponseHandler):
     priority = 9999
 
     def process(self):
