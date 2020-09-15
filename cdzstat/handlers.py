@@ -2,6 +2,7 @@ import json
 from uuid import uuid4
 
 from django.conf import settings
+from django.core.serializers.json import DjangoJSONEncoder
 
 from cdzstat import (
     REDIS_CONN,
@@ -71,14 +72,15 @@ class SessionSetterHandler(RequestResponseHandler):
     def process(self):
         response = self.ctx.get('response')
 
-        encoder = utils.DateTimeEncoder()
-
         session_key = str(uuid4())
+        now = utils.get_dt()
         value = json.dumps({
             'count': 1,
-            'created_at': json.dumps(utils.get_dt(), default=str),
-            'updated_at': json.dumps(utils.get_dt(), default=str),
-        })
+            'created_at': now,
+            'updated_at': now,
+        },
+            cls=DjangoJSONEncoder
+        )
 
         REDIS_CONN.hset(ACTIVE_SESSIONS, key=session_key, value=value)
 
@@ -108,9 +110,9 @@ class SessionUpdateHandler(RequestResponseHandler):
         data = json.loads(raw_data)
 
         data['count'] = data.get('count', 1) + 1
-        data['updated_at'] = json.dumps(utils.get_dt(), default=str)
+        data['updated_at'] = utils.get_dt()
 
-        value = json.dumps(data)
+        value = json.dumps(data, cls=DjangoJSONEncoder)
 
         REDIS_CONN.hset(ACTIVE_SESSIONS, session_key, value=value)
 
