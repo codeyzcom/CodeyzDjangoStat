@@ -12,19 +12,18 @@ from cdzstat import (
 from cdzstat.settings import (
     CDZSTAT_SCRIPT_ID,
     CDZSTAT_SESSION_COOKIE_NAME,
+    CDZSTAT_REQUEST_NUM_NAME,
     CDZSTAT_SESSION_AGE,
 )
 
 
 class RequestResponseHandler:
-    ctx = {'state': True}
 
-    def __init__(self, request, response):
-        self.ctx['request'] = request
-        self.ctx['response'] = response
+    # session_data = {}
+    # requeset_data = {}
 
-    def check_state(self) -> bool:
-        return self.ctx.get('state')
+    def __init__(self, context: dict) -> None:
+        self.ctx = context
 
     def preprocessing(self):
         """
@@ -41,7 +40,20 @@ class StoreHandler(RequestResponseHandler):
     priority = 9999
 
     def process(self):
-        pass
+        name = f'session:{self.ctx.get("session_key")}'
+        request_data = json.dumps(self.ctx.get('requeset_data'))
+
+        if self.ctx.get("session_key"):
+            request_inc = self.ctx.get('request_inc')
+
+            if self.ctx.get('kind') == 'native':
+                REDIS_CONN.hset(name, f'{request_inc}_native', request_data)
+            elif self.ctx.get('kind') == 'script':
+                REDIS_CONN.hset(name, f'{request_inc}_script', request_data)
+        else:
+            REDIS_CONN.lpush(
+                'anonymous_requests', json.dumps(self.ctx.get('requeset_data')
+                                                 ))
 
 
 class SessionGetterHandler(RequestResponseHandler):
@@ -54,12 +66,14 @@ class SessionGetterHandler(RequestResponseHandler):
 
         if cookies:
             session_key = cookies.get(CDZSTAT_SESSION_COOKIE_NAME)
+            request_inc = cookies.get(CDZSTAT_REQUEST_NUM_NAME)
             if session_key and bool(REDIS_CONN.hexists(ACTIVE_SESSIONS, session_key)):
                 self.ctx['new_session'] = False
                 self.ctx['session_key'] = session_key
-            else:
-                self.ctx['new_session'] = True
-                self.ctx['session_key'] = None
+                self.ctx['request_inc'] = request_inc
+                return
+        self.ctx['new_session'] = True
+        self.ctx['session_key'] = None
 
 
 class SessionSetterHandler(RequestResponseHandler):
@@ -73,8 +87,9 @@ class SessionSetterHandler(RequestResponseHandler):
 
         session_key = str(uuid4())
         now = utils.get_dt()
+        request_inc = 1
         value = json.dumps({
-            'count': 1,
+            'request_inc': request_inc,
             'created_at': now,
             'updated_at': now,
         },
@@ -83,9 +98,21 @@ class SessionSetterHandler(RequestResponseHandler):
 
         REDIS_CONN.hset(ACTIVE_SESSIONS, key=session_key, value=value)
 
+        self.ctx['request_inc'] = request_inc
+        self.ctx['session_key'] = session_key
+
         response.set_cookie(
             CDZSTAT_SESSION_COOKIE_NAME,
             session_key,
+            expires=CDZSTAT_SESSION_AGE,
+            path=settings.SESSION_COOKIE_PATH,
+            secure=settings.SESSION_COOKIE_SECURE or None,
+            samesite=settings.SESSION_COOKIE_SAMESITE,
+        )
+
+        response.set_cookie(
+            CDZSTAT_REQUEST_NUM_NAME,
+            request_inc,
             expires=CDZSTAT_SESSION_AGE,
             path=settings.SESSION_COOKIE_PATH,
             secure=settings.SESSION_COOKIE_SECURE or None,
@@ -102,22 +129,30 @@ class SessionUpdateHandler(RequestResponseHandler):
 
     def process(self):
         response = self.ctx.get('response')
-
         session_key = self.ctx.get('session_key')
 
         raw_data = REDIS_CONN.hget(ACTIVE_SESSIONS, session_key)
         data = json.loads(raw_data)
-
-        data['count'] = data.get('count', 1) + 1
+        request_inc = data.get('request_inc', 1) + 1
+        data['request_inc'] = request_inc
         data['updated_at'] = utils.get_dt()
-
         value = json.dumps(data, cls=DjangoJSONEncoder)
-
         REDIS_CONN.hset(ACTIVE_SESSIONS, session_key, value=value)
+
+        self.ctx['request_inc'] = request_inc
 
         response.set_cookie(
             CDZSTAT_SESSION_COOKIE_NAME,
             session_key,
+            expires=CDZSTAT_SESSION_AGE,
+            path=settings.SESSION_COOKIE_PATH,
+            secure=settings.SESSION_COOKIE_SECURE or None,
+            samesite=settings.SESSION_COOKIE_SAMESITE,
+        )
+
+        response.set_cookie(
+            CDZSTAT_REQUEST_NUM_NAME,
+            request_inc,
             expires=CDZSTAT_SESSION_AGE,
             path=settings.SESSION_COOKIE_PATH,
             secure=settings.SESSION_COOKIE_SECURE or None,
@@ -161,14 +196,14 @@ class IpAddressHandler(RequestResponseHandler):
             ip = x_forwarded_for.split(',')[0]
         else:
             ip = request.META.get('REMOTE_ADDR')
-        self.ctx['ip_address'] = ip
+        self.ctx['requeset_data']['ip_address'] = ip
 
 
 class UserAgentHandler(RequestResponseHandler):
     priority = 30
 
     def process(self):
-        self.ctx['user_agent'] = self.ctx.get(
+        self.ctx['session_data']['user_agent'] = self.ctx.get(
             'request'
         ).META.get('HTTP_USER_AGENT')
 
@@ -178,8 +213,8 @@ class HttpHeadersHandler(RequestResponseHandler):
 
     def process(self):
         request = self.ctx.get('request')
-        self.ctx['content_type'] = request.content_type
-        self.ctx['accepted_types'] = [
+        self.ctx['requeset_data']['content_type'] = request.content_type
+        self.ctx['requeset_data']['accepted_types'] = [
             (x.main_type, x.sub_type) for x in request.accepted_types
         ]
 
@@ -189,14 +224,14 @@ class NodeNativeHandler(RequestResponseHandler):
 
     def process(self):
         request = self.ctx.get('request')
-        self.ctx['node'] = request.path_info
+        self.ctx['requeset_data']['node'] = request.path_info
 
 
 class NodeScriptHandler(RequestResponseHandler):
     priority = 40
 
     def process(self):
-        self.ctx['node'] = 'NODE cdz_scipt.js'
+        self.ctx['requeset_data']['node'] = 'NODE cdz_scipt.js'
 
 
 class TransitionNativeHandler(RequestResponseHandler):
@@ -205,8 +240,8 @@ class TransitionNativeHandler(RequestResponseHandler):
     def process(self):
         request = self.ctx.get('request')
 
-        self.ctx['transition'] = {
-            'to': self.ctx.get('node'),
+        self.ctx['requeset_data']['transition'] = {
+            'to': self.ctx.get('node_native'),
             'from': request.META.get('HTTP_REFERER')
         }
 
@@ -217,8 +252,8 @@ class TransitionScriptHandler(RequestResponseHandler):
     def process(self):
         request = self.ctx.get('request')
 
-        self.ctx['transition'] = {
-            'to': 'TO cdz_stat.js',
+        self.ctx['requeset_data']['transition'] = {
+            'to': self.ctx.get('node_script'),
             'from': 'from cdz_stat.js'
         }
 
@@ -243,7 +278,7 @@ class AdvancedParamScriptHandler(RequestResponseHandler):
             'screen_color_depth': params.get('screen_color_depth'),
             'screen_pixel_depth': params.get('screen_pixel_depth'),
         }
-        self.ctx.update(view_params)
+        self.ctx['requeset_data']['view_params'] = view_params
 
 
 class SpeedScriptHandler(RequestResponseHandler):
@@ -255,4 +290,4 @@ class SpeedScriptHandler(RequestResponseHandler):
             'processing': params.get('processing'),
             'loadingTime': params.get('loadingTime'),
         }
-        self.ctx.update(speed_params)
+        self.ctx['requeset_data']['speed_params'] = speed_params

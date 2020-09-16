@@ -8,21 +8,30 @@ logger = logging.getLogger()
 class Poller:
 
     def __init__(self, request, response):
-        self._req = request
-        self._resp = response
+        # self._req = request
+        # self._resp = response
         self.handler_set = []
+        self. ctx = {
+            'state': True,
+            'request': request,
+            'response': response,
+            'requeset_data': {},
+            'session_data': {}
+            }
 
     def execute(self):
-        if self._req.path_info == '/cdzstat/collect_statistic':
+        if self.ctx.get('request').path_info == '/cdzstat/collect_statistic':
             self.handler_set = self._prepare_script_handlers()
+            self.ctx['kind'] = 'script'
         else:
             self.handler_set = self._prepare_native_handlers()
+            self.ctx['kind'] = 'native'
 
         sorted_handlers = sorted(self.handler_set, key=lambda k: k.priority)
 
         for handler in sorted_handlers:
-            obj = handler(self._req, self._resp)
-            if obj.check_state():
+            obj = handler(self.ctx)
+            if self.ctx.get('state'):
                 if obj.preprocessing():
                     obj.process()
                 else:
