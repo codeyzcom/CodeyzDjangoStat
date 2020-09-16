@@ -12,15 +12,13 @@ from cdzstat import (
 from cdzstat.settings import (
     CDZSTAT_SCRIPT_ID,
     CDZSTAT_SESSION_COOKIE_NAME,
+    CDZSTAT_REQUEST_COOKIE_NAME,
     CDZSTAT_REQUEST_NUM_NAME,
     CDZSTAT_SESSION_AGE,
 )
 
 
 class RequestResponseHandler:
-
-    # session_data = {}
-    # requeset_data = {}
 
     def __init__(self, context: dict) -> None:
         self.ctx = context
@@ -40,20 +38,54 @@ class StoreHandler(RequestResponseHandler):
     priority = 9999
 
     def process(self):
-        name = f'session:{self.ctx.get("session_key")}'
+        session_key = f'session:{self.ctx.get("session_key")}'
         request_data = json.dumps(self.ctx.get('requeset_data'))
 
         if self.ctx.get("session_key"):
             request_inc = self.ctx.get('request_inc')
 
             if self.ctx.get('kind') == 'native':
-                REDIS_CONN.hset(name, f'{request_inc}_native', request_data)
+                REDIS_CONN.hset(session_key, f'{request_inc}_native', request_data)
             elif self.ctx.get('kind') == 'script':
-                REDIS_CONN.hset(name, f'{request_inc}_script', request_data)
+                REDIS_CONN.hset(session_key, f'{request_inc}_script', request_data)
         else:
             REDIS_CONN.lpush(
-                'anonymous_requests', json.dumps(self.ctx.get('requeset_data')
-                                                 ))
+                'anonymous_requests', json.dumps(
+                    self.ctx.get('requeset_data')
+                ))
+
+
+class RequestGetterHandler(RequestResponseHandler):
+    priority = 7
+
+    def process(self):
+        request = self.ctx.get('request')
+        cookies = request.COOKIES
+
+        if cookies:
+            request_key = cookies.get(CDZSTAT_REQUEST_COOKIE_NAME)
+            if request_key:
+                self.ctx[CDZSTAT_REQUEST_COOKIE_NAME] = request_key
+
+
+class RequestSetterHandler(RequestResponseHandler):
+    priority = 7
+
+    def process(self):
+        response = self.ctx.get('response')
+
+        new_request_key = str(uuid4())
+        if response:
+            self.ctx[CDZSTAT_REQUEST_COOKIE_NAME] = new_request_key
+
+            response.set_cookie(
+                CDZSTAT_REQUEST_COOKIE_NAME,
+                new_request_key,
+                expires=CDZSTAT_SESSION_AGE,
+                path=settings.SESSION_COOKIE_PATH,
+                secure=settings.SESSION_COOKIE_SECURE or None,
+                samesite=settings.SESSION_COOKIE_SAMESITE,
+            )
 
 
 class SessionGetterHandler(RequestResponseHandler):
@@ -66,11 +98,9 @@ class SessionGetterHandler(RequestResponseHandler):
 
         if cookies:
             session_key = cookies.get(CDZSTAT_SESSION_COOKIE_NAME)
-            request_inc = cookies.get(CDZSTAT_REQUEST_NUM_NAME)
             if session_key and bool(REDIS_CONN.hexists(ACTIVE_SESSIONS, session_key)):
                 self.ctx['new_session'] = False
                 self.ctx['session_key'] = session_key
-                self.ctx['request_inc'] = request_inc
                 return
         self.ctx['new_session'] = True
         self.ctx['session_key'] = None
@@ -87,9 +117,9 @@ class SessionSetterHandler(RequestResponseHandler):
 
         session_key = str(uuid4())
         now = utils.get_dt()
-        request_inc = 1
+        count = 1
         value = json.dumps({
-            'request_inc': request_inc,
+            'count': count,
             'created_at': now,
             'updated_at': now,
         },
@@ -98,21 +128,11 @@ class SessionSetterHandler(RequestResponseHandler):
 
         REDIS_CONN.hset(ACTIVE_SESSIONS, key=session_key, value=value)
 
-        self.ctx['request_inc'] = request_inc
         self.ctx['session_key'] = session_key
 
         response.set_cookie(
             CDZSTAT_SESSION_COOKIE_NAME,
             session_key,
-            expires=CDZSTAT_SESSION_AGE,
-            path=settings.SESSION_COOKIE_PATH,
-            secure=settings.SESSION_COOKIE_SECURE or None,
-            samesite=settings.SESSION_COOKIE_SAMESITE,
-        )
-
-        response.set_cookie(
-            CDZSTAT_REQUEST_NUM_NAME,
-            request_inc,
             expires=CDZSTAT_SESSION_AGE,
             path=settings.SESSION_COOKIE_PATH,
             secure=settings.SESSION_COOKIE_SECURE or None,
@@ -132,27 +152,20 @@ class SessionUpdateHandler(RequestResponseHandler):
         session_key = self.ctx.get('session_key')
 
         raw_data = REDIS_CONN.hget(ACTIVE_SESSIONS, session_key)
+
         data = json.loads(raw_data)
-        request_inc = data.get('request_inc', 1) + 1
-        data['request_inc'] = request_inc
+        count = data.get('count', 1) + 1
+        data['count'] = count
         data['updated_at'] = utils.get_dt()
+
         value = json.dumps(data, cls=DjangoJSONEncoder)
         REDIS_CONN.hset(ACTIVE_SESSIONS, session_key, value=value)
 
-        self.ctx['request_inc'] = request_inc
+        self.ctx['count'] = count
 
         response.set_cookie(
             CDZSTAT_SESSION_COOKIE_NAME,
             session_key,
-            expires=CDZSTAT_SESSION_AGE,
-            path=settings.SESSION_COOKIE_PATH,
-            secure=settings.SESSION_COOKIE_SECURE or None,
-            samesite=settings.SESSION_COOKIE_SAMESITE,
-        )
-
-        response.set_cookie(
-            CDZSTAT_REQUEST_NUM_NAME,
-            request_inc,
             expires=CDZSTAT_SESSION_AGE,
             path=settings.SESSION_COOKIE_PATH,
             secure=settings.SESSION_COOKIE_SECURE or None,

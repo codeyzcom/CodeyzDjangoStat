@@ -8,8 +8,6 @@ logger = logging.getLogger()
 class Poller:
 
     def __init__(self, request, response):
-        # self._req = request
-        # self._resp = response
         self.handler_set = []
         self. ctx = {
             'state': True,
@@ -45,6 +43,7 @@ class Poller:
     def _prepare_native_handlers(self) -> list:
         return [
             handlers.StoreHandler,
+            handlers.RequestSetterHandler,
             handlers.SessionGetterHandler,
             handlers.SessionSetterHandler,
             handlers.SessionUpdateHandler,
@@ -61,6 +60,7 @@ class Poller:
         return [
             handlers.ScriptInitHandler,
             handlers.StoreHandler,
+            handlers.RequestGetterHandler,
             handlers.SessionGetterHandler,
             handlers.PermanentSessionHandler,
             handlers.IpAddressHandler,
