@@ -12,7 +12,6 @@ from cdzstat import (
 from cdzstat.settings import (
     CDZSTAT_SCRIPT_ID,
     CDZSTAT_SESSION_COOKIE_NAME,
-    CDZSTAT_REQUEST_NUM_NAME,
     CDZSTAT_SESSION_AGE,
 )
 
