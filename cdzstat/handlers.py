@@ -38,16 +38,23 @@ class StoreHandler(RequestResponseHandler):
     priority = 9999
 
     def process(self):
-        session_key = f'session:{self.ctx.get("session_key")}'
+        session_key = self.ctx.get("session_key")
+        request_key = self.ctx.get('request_key')
         request_data = json.dumps(self.ctx.get('requeset_data'))
 
-        if self.ctx.get("session_key"):
-            request_inc = self.ctx.get('request_inc')
-
+        if session_key and request_key:
             if self.ctx.get('kind') == 'native':
-                REDIS_CONN.hset(session_key, f'{request_inc}_native', request_data)
+                REDIS_CONN.hset(
+                    f'session:{session_key}',
+                    f'{request_key}_native',
+                    request_data
+                )
             elif self.ctx.get('kind') == 'script':
-                REDIS_CONN.hset(session_key, f'{request_inc}_script', request_data)
+                REDIS_CONN.hset(
+                    f'session:{session_key}',
+                    f'{request_key}_script',
+                    request_data
+                )
         else:
             REDIS_CONN.lpush(
                 'anonymous_requests', json.dumps(
@@ -129,6 +136,7 @@ class SessionSetterHandler(RequestResponseHandler):
         REDIS_CONN.hset(ACTIVE_SESSIONS, key=session_key, value=value)
 
         self.ctx['session_key'] = session_key
+        self.ctx['request_count'] = count
 
         response.set_cookie(
             CDZSTAT_SESSION_COOKIE_NAME,
@@ -161,7 +169,7 @@ class SessionUpdateHandler(RequestResponseHandler):
         value = json.dumps(data, cls=DjangoJSONEncoder)
         REDIS_CONN.hset(ACTIVE_SESSIONS, session_key, value=value)
 
-        self.ctx['count'] = count
+        self.ctx['request_count'] = count
 
         response.set_cookie(
             CDZSTAT_SESSION_COOKIE_NAME,
