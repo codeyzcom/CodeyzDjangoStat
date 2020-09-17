@@ -1,4 +1,5 @@
 import json
+from datetime import datetime
 from uuid import uuid4
 
 from django.conf import settings
@@ -13,7 +14,6 @@ from cdzstat.settings import (
     CDZSTAT_SCRIPT_ID,
     CDZSTAT_SESSION_COOKIE_NAME,
     CDZSTAT_REQUEST_COOKIE_NAME,
-    CDZSTAT_REQUEST_NUM_NAME,
     CDZSTAT_SESSION_AGE,
 )
 
@@ -40,7 +40,10 @@ class StoreHandler(RequestResponseHandler):
     def process(self):
         session_key = self.ctx.get("session_key")
         request_key = self.ctx.get('request_key')
-        request_data = json.dumps(self.ctx.get('requeset_data'))
+        request_data = json.dumps(
+            self.ctx.get('request_data'),
+            cls=DjangoJSONEncoder
+        )
 
         if session_key and request_key:
             if self.ctx.get('kind') == 'native':
@@ -58,7 +61,7 @@ class StoreHandler(RequestResponseHandler):
         else:
             REDIS_CONN.lpush(
                 'anonymous_requests', json.dumps(
-                    self.ctx.get('requeset_data')
+                    self.ctx.get('request_data')
                 ))
 
 
@@ -217,7 +220,7 @@ class IpAddressHandler(RequestResponseHandler):
             ip = x_forwarded_for.split(',')[0]
         else:
             ip = request.META.get('REMOTE_ADDR')
-        self.ctx['requeset_data']['ip_address'] = ip
+        self.ctx['request_data']['ip_address'] = ip
 
 
 class UserAgentHandler(RequestResponseHandler):
@@ -234,8 +237,8 @@ class HttpHeadersHandler(RequestResponseHandler):
 
     def process(self):
         request = self.ctx.get('request')
-        self.ctx['requeset_data']['content_type'] = request.content_type
-        self.ctx['requeset_data']['accepted_types'] = [
+        self.ctx['request_data']['content_type'] = request.content_type
+        self.ctx['request_data']['accepted_types'] = [
             (x.main_type, x.sub_type) for x in request.accepted_types
         ]
 
@@ -245,14 +248,14 @@ class NodeNativeHandler(RequestResponseHandler):
 
     def process(self):
         request = self.ctx.get('request')
-        self.ctx['requeset_data']['node'] = request.path_info
+        self.ctx['request_data']['node'] = request.path_info
 
 
 class NodeScriptHandler(RequestResponseHandler):
     priority = 40
 
     def process(self):
-        self.ctx['requeset_data']['node'] = 'NODE cdz_scipt.js'
+        self.ctx['request_data']['node'] = 'NODE cdz_scipt.js'
 
 
 class TransitionNativeHandler(RequestResponseHandler):
@@ -261,7 +264,7 @@ class TransitionNativeHandler(RequestResponseHandler):
     def process(self):
         request = self.ctx.get('request')
 
-        self.ctx['requeset_data']['transition'] = {
+        self.ctx['request_data']['transition'] = {
             'to': self.ctx.get('node_native'),
             'from': request.META.get('HTTP_REFERER')
         }
@@ -273,7 +276,7 @@ class TransitionScriptHandler(RequestResponseHandler):
     def process(self):
         request = self.ctx.get('request')
 
-        self.ctx['requeset_data']['transition'] = {
+        self.ctx['request_data']['transition'] = {
             'to': self.ctx.get('node_script'),
             'from': 'from cdz_stat.js'
         }
@@ -299,7 +302,7 @@ class AdvancedParamScriptHandler(RequestResponseHandler):
             'screen_color_depth': params.get('screen_color_depth'),
             'screen_pixel_depth': params.get('screen_pixel_depth'),
         }
-        self.ctx['requeset_data']['view_params'] = view_params
+        self.ctx['request_data']['view_params'] = view_params
 
 
 class SpeedScriptHandler(RequestResponseHandler):
@@ -311,4 +314,24 @@ class SpeedScriptHandler(RequestResponseHandler):
             'processing': params.get('processing'),
             'loadingTime': params.get('loadingTime'),
         }
-        self.ctx['requeset_data']['speed_params'] = speed_params
+        self.ctx['request_data']['speed_params'] = speed_params
+
+
+class TimestampNativeHandler(RequestResponseHandler):
+    priority = 5
+
+    def process(self):
+        self.ctx['request_data']['timestamp'] = utils.get_dt()
+
+
+class TimestampScriptHandler(RequestResponseHandler):
+    priority = 65
+
+    def process(self):
+        timestamp = self.ctx.get('payload').get('timestamp')
+
+        if timestamp:
+            timestamp_dt = datetime.fromtimestamp(
+                timestamp / 1000.0
+            ).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
+            self.ctx['request_data']['timestamp'] = timestamp_dt

@@ -13,7 +13,7 @@ class Poller:
             'state': True,
             'request': request,
             'response': response,
-            'requeset_data': {},
+            'request_data': {},
             'session_data': {}
             }
 
@@ -43,6 +43,7 @@ class Poller:
     def _prepare_native_handlers(self) -> list:
         return [
             handlers.StoreHandler,
+            handlers.TimestampNativeHandler,
             handlers.RequestSetterHandler,
             handlers.SessionGetterHandler,
             handlers.SessionSetterHandler,
@@ -50,6 +51,7 @@ class Poller:
             handlers.PermanentSessionHandler,
             handlers.IpAddressHandler,
             handlers.UserAgentHandler,
+            handlers.TimestampNativeHandler,
             handlers.HttpHeadersHandler,
             handlers.NodeNativeHandler,
             handlers.TransitionNativeHandler,
@@ -69,4 +71,5 @@ class Poller:
             handlers.TransitionScriptHandler,
             handlers.AdjacencyHandler,
             handlers.AdvancedParamScriptHandler,
+            handlers.TimestampScriptHandler,
         ]

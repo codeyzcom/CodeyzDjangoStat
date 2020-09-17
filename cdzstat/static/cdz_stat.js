@@ -1,4 +1,4 @@
-const SERVER_ADDRESS = 'http://127.0.0.1:8000/'
+const SERVER_ADDRESS = 'http://127.0.0.1:8099/'
 const CDZ_SESSION_NAME = 'cdz_session'
 const CDZ_REQUEST_KEY = 'request_key'
 
@@ -154,9 +154,12 @@ window.onload = function () {
     let data = collect_data();
     let param = collect_param();
     let speed = measure_speed();
+    var timeStampInMs = window.performance && window.performance.now && window.performance.timing && window.performance.timing.navigationStart ? window.performance.now() + window.performance.timing.navigationStart : Date.now();
+
+    console.log(timeStampInMs, Date.now());
     sendDataPost({
         'cdzscript': 20200914879915,
-        'timestamp': Date.now(),
+        'timestamp': timeStampInMs,
         'data': data, 'params': param, 'speed': speed
     })
 }
