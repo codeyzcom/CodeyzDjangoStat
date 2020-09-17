@@ -1,0 +1,57 @@
+{% extends 'admin/base_site.html' %}
+
+
+{% block branding %}
+<h1 id="site-name"><a href="{% url 'cdzstat:dashboard' %}">CodeyzDjangoStat</a></h1>
+{% endblock %}
+
+
+
+{% block content %}
+    
+<div class="main shifted" id="main">
+
+
+  <nav class="sticky" id="nav-sidebar" style="width: 100px;">
+    <div class="module">
+      <table>
+        <caption>
+          <a href="{% url 'cdzstat:dashboard' %}" class="section" title="CodeyzDjangoStat">CodeyzDjangoStat</a>
+        </caption>
+          <tbody>
+          <tr class="model-browser">
+              <th scope="row"><a href="{% url 'cdzstat:dashboard' %}">Dashboard</a></th>
+          </tr>        
+                    <tr class="model-browser">
+              <th scope="row"><a href="{% url 'cdzstat:dashboard' %}">Online monitor</a></th>
+          </tr>  
+                    <tr class="model-browser">
+              <th scope="row"><a href="{% url 'cdzstat:dashboard' %}">Daily statistics</a></th>
+          </tr>  
+                              <tr class="model-browser">
+              <th scope="row"><a href="{% url 'cdzstat:dashboard' %}">Monthly statistics</a></th>
+          </tr>  
+                              <tr class="model-browser">
+              <th scope="row"><a href="{% url 'cdzstat:dashboard' %}">Annual statistics</a></th>
+          </tr>  
+      </tbody></table>
+    </div>
+  </nav>      
+          
+                  
+    <div class="content">
+        <!-- Content -->
+        <div id="content" class="colM">
+          
+          <h1>Queued jobs in default</h1>
+sdsd
+        </div>
+    <div>
+
+</div>
+
+
+
+
+
+{% endblock %}
