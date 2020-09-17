@@ -1,3 +1,4 @@
+import re
 import json
 from datetime import datetime
 from uuid import uuid4
@@ -343,7 +344,17 @@ class RequestSizeHandler(RequestResponseHandler):
     def process(self):
         request = self.ctx.get('request')
 
-        self.ctx['request_data']['request_lenght'] = len(request.body)
+        regex = re.compile('^HTTP_')
+        headers = dict(
+            (regex.sub('', header), value)
+            for (header, value) in request.META.items()
+            if header.startswith('HTTP_')
+        )
+
+        raw_headers = json.dumps(headers)
+
+        self.ctx['request_data']['request_header_lenght'] = len(raw_headers)
+        self.ctx['request_data']['request_body_lenght'] = len(request.body)
 
 
 class ResponseSizeHandler(RequestResponseHandler):
@@ -351,5 +362,4 @@ class ResponseSizeHandler(RequestResponseHandler):
 
     def process(self):
         response = self.ctx.get('response')
-
-        self.ctx['request_data']['response_lenght'] = len(response.content)
+        self.ctx['request_data']['response_content_lenght'] = len(response.content)
