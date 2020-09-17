@@ -56,6 +56,8 @@ class Poller:
             handlers.NodeNativeHandler,
             handlers.TransitionNativeHandler,
             handlers.AdjacencyHandler,
+            handlers.RequestSizeHandler,
+            handlers.ResponseSizeHandler
         ]
 
     def _prepare_script_handlers(self) -> list:

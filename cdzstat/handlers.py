@@ -335,3 +335,21 @@ class TimestampScriptHandler(RequestResponseHandler):
                 timestamp / 1000.0
             ).strftime('%Y-%m-%d %H:%M:%S.%f')[:-3]
             self.ctx['request_data']['timestamp'] = timestamp_dt
+
+
+class RequestSizeHandler(RequestResponseHandler):
+    priority = 70
+
+    def process(self):
+        request = self.ctx.get('request')
+
+        self.ctx['request_data']['request_lenght'] = len(request.body)
+
+
+class ResponseSizeHandler(RequestResponseHandler):
+    priority = 75
+
+    def process(self):
+        response = self.ctx.get('response')
+
+        self.ctx['request_data']['response_lenght'] = len(response.content)
