@@ -266,7 +266,7 @@ class TransitionNativeHandler(RequestResponseHandler):
         request = self.ctx.get('request')
 
         self.ctx['request_data']['transition'] = {
-            'to': self.ctx.get('node_native'),
+            'to': self.ctx.get('node'),
             'from': request.META.get('HTTP_REFERER')
         }
 
