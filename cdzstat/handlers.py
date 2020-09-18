@@ -9,6 +9,8 @@ from django.core.serializers.json import DjangoJSONEncoder
 from cdzstat import (
     REDIS_CONN,
     ACTIVE_SESSIONS,
+    SESSION_KEY,
+    REQUEST_COUNT,
     utils,
 )
 from cdzstat.settings import (
@@ -39,7 +41,7 @@ class StoreHandler(RequestResponseHandler):
     priority = 9999
 
     def process(self):
-        session_key = self.ctx.get("session_key")
+        session_key = self.ctx.get(SESSION_KEY)
         request_key = self.ctx.get('request_key')
         request_data = json.dumps(
             self.ctx.get('request_data'),
@@ -111,10 +113,10 @@ class SessionGetterHandler(RequestResponseHandler):
             session_key = cookies.get(CDZSTAT_SESSION_COOKIE_NAME)
             if session_key and bool(REDIS_CONN.hexists(ACTIVE_SESSIONS, session_key)):
                 self.ctx['new_session'] = False
-                self.ctx['session_key'] = session_key
+                self.ctx[SESSION_KEY] = session_key
                 return
         self.ctx['new_session'] = True
-        self.ctx['session_key'] = None
+        self.ctx[SESSION_KEY] = None
 
 
 class SessionSetterHandler(RequestResponseHandler):
@@ -139,8 +141,8 @@ class SessionSetterHandler(RequestResponseHandler):
 
         REDIS_CONN.hset(ACTIVE_SESSIONS, key=session_key, value=value)
 
-        self.ctx['session_key'] = session_key
-        self.ctx['request_count'] = count
+        self.ctx[SESSION_KEY] = session_key
+        self.ctx[REQUEST_COUNT] = count
 
         response.set_cookie(
             CDZSTAT_SESSION_COOKIE_NAME,
@@ -156,12 +158,12 @@ class SessionUpdateHandler(RequestResponseHandler):
     priority = 15
 
     def preprocessing(self):
-        if not self.ctx.get('new_session') and self.ctx.get('session_key'):
+        if not self.ctx.get('new_session') and self.ctx.get(SESSION_KEY):
             return True
 
     def process(self):
         response = self.ctx.get('response')
-        session_key = self.ctx.get('session_key')
+        session_key = self.ctx.get(SESSION_KEY)
 
         raw_data = REDIS_CONN.hget(ACTIVE_SESSIONS, session_key)
 
@@ -173,7 +175,7 @@ class SessionUpdateHandler(RequestResponseHandler):
         value = json.dumps(data, cls=DjangoJSONEncoder)
         REDIS_CONN.hset(ACTIVE_SESSIONS, session_key, value=value)
 
-        self.ctx['request_count'] = count
+        self.ctx[REQUEST_COUNT] = count
 
         response.set_cookie(
             CDZSTAT_SESSION_COOKIE_NAME,
