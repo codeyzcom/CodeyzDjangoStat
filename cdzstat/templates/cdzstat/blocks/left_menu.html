@@ -1,0 +1,17 @@
+
+  <nav class="sticky" id="nav-sidebar" >
+    <div class="module">
+      <table style="width: 100%;">
+        <caption>
+          <a href="{% url 'cdzstat:dashboard' %}" class="section" title="CodeyzDjangoStat">CodeyzDjangoStat</a>
+        </caption>
+          <tbody>
+          <tr class="model-browser">
+              <th scope="row"><a href="{% url 'cdzstat:dashboard' %}">Dashboard</a></th>
+          </tr>        
+          <tr class="model-browser">
+              <th scope="row"><a href="{% url 'cdzstat:exceptions' %}">Exceptions</a></th>
+          </tr>  
+      </tbody></table>
+    </div>
+  </nav>    

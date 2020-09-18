@@ -13,6 +13,13 @@ def dummy_view(request):
 
 @staff_member_required
 def dashboard(request):
-    ctx = {}
+    ctx = {'is_popup': False, 'is_nav_sidebar_enabled': True}
 
     return render(request, 'cdzstat/dashboard.html', context=ctx)
+
+
+@staff_member_required
+def exceptions(request):
+    ctx = {'is_popup': False, 'is_nav_sidebar_enabled': True}
+
+    return render(request, 'cdzstat/exceptions.html', context=ctx)
