@@ -258,7 +258,9 @@ class NodeScriptHandler(RequestResponseHandler):
     priority = 40
 
     def process(self):
-        self.ctx['request_data']['node'] = 'NODE cdz_scipt.js'
+        self.ctx['request_data']['node'] = self.ctx.get(
+            'payload'
+            ).get('data').get('doc_url')
 
 
 class TransitionNativeHandler(RequestResponseHandler):
@@ -279,9 +281,13 @@ class TransitionScriptHandler(RequestResponseHandler):
     def process(self):
         request = self.ctx.get('request')
 
+        referer = self.ctx.get(
+            'payload'
+            ).get('data').get('doc_ref')
+
         self.ctx['request_data']['transition'] = {
             'to': self.ctx.get('node_script'),
-            'from': 'from cdz_stat.js'
+            'from': referer
         }
 
 
