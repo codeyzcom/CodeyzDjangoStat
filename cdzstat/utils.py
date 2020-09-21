@@ -1,5 +1,10 @@
+"""
+Miscellaneous helper functions.
+"""
 import random
+import calendar
 import string
+from datetime import datetime
 from urllib.parse import urlparse
 
 from django.utils.timezone import localtime
@@ -20,6 +25,13 @@ def rand_symbols(length: int = 10) -> str:
 
 def get_dt():
     return localtime().today()
+
+
+def current_timestamp():
+    """
+    Returns current UTC timestamp
+    """
+    return calendar.timegm(datetime.utcnow().utctimetuple())
 
 
 def get_session(key: str) -> str:
