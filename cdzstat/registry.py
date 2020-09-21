@@ -14,6 +14,13 @@ class BaseQueueRegistry:
     def __len__(self):
         return self.count
 
+    def __contains__(self, item):
+        """
+        Return a boolean indicateing registry contains the 
+        given key
+        """
+        return self.connection.zscore(self.queue_key, item) is not None
+
     @property
     def count(self):
         """Returns the number of keys in this rigistry"""
