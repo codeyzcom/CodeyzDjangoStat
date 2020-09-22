@@ -32,8 +32,12 @@ class BaseQueueRegistry:
 
         if pipeline is not None:
             return pipeline.zadd(self.queue_key, {key: score})
-
         return self.connection.zadd(self.queue_key, {key: score})
+    
+    def update(self, key, ttl, pipeline=None):
+        if pipeline is not None:
+            return pipeline.zincrby(self.queue_key, ttl, key)
+        return self.connection.zincrby(self.queue_key, ttl, key)
 
     def get_expired_keys(self, timestamp=None):
         """Return keys whos score are less than current timestamp"""
