@@ -145,7 +145,7 @@ class SessionSetterHandler(RequestResponseHandler):
         # REDIS_CONN.hset(ACTIVE_SESSIONS, key=session_key, value=value)
 
         reg = registry.SessionRegistry(REDIS_CONN)
-        reg.add(session_key, 10)
+        reg.add(session_key, CDZSTAT_SESSION_AGE)
 
         self.ctx[SESSION_KEY] = session_key
         # self.ctx[REQUEST_COUNT] = count
