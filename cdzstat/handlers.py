@@ -8,7 +8,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 
 from cdzstat import (
     REDIS_CONN,
-    # ACTIVE_SESSIONS,
+    ACTIVE_SESSIONS,
     SESSION_KEY,
     REQUEST_COUNT,
     registry,
@@ -112,8 +112,8 @@ class SessionGetterHandler(RequestResponseHandler):
 
         if cookies:
             session_key = cookies.get(CDZSTAT_SESSION_COOKIE_NAME)
-            qr = registry.BaseQueueRegistry('sessions', REDIS_CONN)
-            if session_key and session_key in qr:
+            reg = registry.BaseQueueRegistry(ACTIVE_SESSIONS, REDIS_CONN)
+            if session_key and session_key in reg:
             # if session_key and bool(REDIS_CONN.hexists(ACTIVE_SESSIONS, session_key)):
                 self.ctx['new_session'] = False
                 self.ctx[SESSION_KEY] = session_key
@@ -144,8 +144,8 @@ class SessionSetterHandler(RequestResponseHandler):
 
         # REDIS_CONN.hset(ACTIVE_SESSIONS, key=session_key, value=value)
 
-        qr = registry.BaseQueueRegistry('sessions', REDIS_CONN)
-        qr.add(session_key, CDZSTAT_SESSION_AGE)
+        reg = registry.BaseQueueRegistry(ACTIVE_SESSIONS, REDIS_CONN)
+        reg.add(session_key, 10)
 
         self.ctx[SESSION_KEY] = session_key
         # self.ctx[REQUEST_COUNT] = count
@@ -181,8 +181,8 @@ class SessionUpdateHandler(RequestResponseHandler):
         # value = json.dumps(data, cls=DjangoJSONEncoder)
         # REDIS_CONN.hset(ACTIVE_SESSIONS, session_key, value=value)
 
-        qr = registry.BaseQueueRegistry('sessions', REDIS_CONN)
-        qr.update_at_ttl(session_key, CDZSTAT_SESSION_AGE)
+        reg = registry.BaseQueueRegistry(ACTIVE_SESSIONS, REDIS_CONN)
+        reg.update_at_ttl(session_key, CDZSTAT_SESSION_AGE)
 
         # self.ctx[REQUEST_COUNT] = count
 

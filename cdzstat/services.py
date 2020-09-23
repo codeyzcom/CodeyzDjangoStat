@@ -21,9 +21,30 @@ from .settings import (
     CDZSTAT_PERMANENT_COOKIE_AGE,
 )
 from cdzstat import (
+    ACTIVE_SESSIONS,
     models,
     utils,
+    registry,
 )
+
+
+class SessionGarbageCollector:
+
+    def __init__(self):
+        pass
+    
+    def execute(self):
+        reg = registry.BaseQueueRegistry(ACTIVE_SESSIONS, REDIS_CONN)
+        expired_keys = reg.get_expired_keys()
+
+        if expired_keys:
+            with REDIS_CONN.pipeline() as p:
+                for key in expired_keys:
+                    print(f'Notify about removing key {key}')
+                    reg.remove(key, p)
+                    p.delete(f'session:{key}')
+                p.execute()
+
 
 
 class ServiceUtils:

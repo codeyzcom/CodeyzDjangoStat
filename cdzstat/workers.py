@@ -26,8 +26,10 @@ class SessionWorker:
         ps.subscribe(settings.CDZSTAT_QUEUE_SESSION)
 
         while True:
-            message = ps.get_message()
-            if message and message.get('type') == 'message':
-                dhs = services.DataHandlerService(message.get('data'))
-                self.q.enqueue(dhs.process, result_ttl=5)
-            time.sleep(0.1)
+            # message = ps.get_message()
+            # if message and message.get('type') == 'message':
+                # dhs = services.DataHandlerService(message.get('data'))
+                # self.q.enqueue(dhs.process, result_ttl=5)
+            s_gc = services.SessionGarbageCollector()
+            s_gc.execute()
+            time.sleep(1)
