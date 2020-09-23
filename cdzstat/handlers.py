@@ -8,9 +8,7 @@ from django.core.serializers.json import DjangoJSONEncoder
 
 from cdzstat import (
     REDIS_CONN,
-    ACTIVE_SESSIONS,
     SESSION_KEY,
-    REQUEST_COUNT,
     registry,
     utils,
 )
