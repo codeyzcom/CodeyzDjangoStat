@@ -28,7 +28,7 @@ from cdzstat import (
 )
 
 
-class SessionGarbageCollector:
+class SessionGarbageCollectorService:
 
     def __init__(self):
         pass
