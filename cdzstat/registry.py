@@ -1,15 +1,15 @@
-from cdzstat.utils import current_timestamp
+from cdzstat import (
+    ACTIVE_SESSIONS,
+    utils,
+)
 
 
-class BaseQueueRegistry:
+class SessionRegistry:
 
-    registry_template = 'cdzstat:registry:{0}'
+    template_key = ACTIVE_SESSIONS
 
-    def __init__(self, name='default', connection=None):
+    def __init__(self, connection=None):
         self.connection = connection
-        self.name = name
-
-        self.template_key = self.registry_template.format(self.name)
 
     def __len__(self):
         return self.count
@@ -28,12 +28,12 @@ class BaseQueueRegistry:
 
     def add(self, key, ttl):
         """Adds a key to a registry with expire time of now + ttl"""
-        score = current_timestamp() + ttl
+        score = utils.current_timestamp() + ttl
         return self.connection.zadd(self.template_key, {key: score})
 
     def update_at_ttl(self, key, increment) -> bool:
         current_score = self.connection.zscore(self.template_key, key)
-        now = current_timestamp()
+        now = utils.current_timestamp()
         if now > current_score:
             return False
         value = (now + increment) - current_score
@@ -43,7 +43,7 @@ class BaseQueueRegistry:
     def get_expired_keys(self, timestamp=None):
         """Return keys whos score are less than current timestamp"""
 
-        score = timestamp if timestamp is not None else current_timestamp()
+        score = timestamp if timestamp is not None else utils.current_timestamp()
 
         return [
             str(k) for k in

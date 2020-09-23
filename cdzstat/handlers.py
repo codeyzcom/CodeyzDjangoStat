@@ -112,7 +112,7 @@ class SessionGetterHandler(RequestResponseHandler):
 
         if cookies:
             session_key = cookies.get(CDZSTAT_SESSION_COOKIE_NAME)
-            reg = registry.BaseQueueRegistry(ACTIVE_SESSIONS, REDIS_CONN)
+            reg = registry.SessionRegistry(REDIS_CONN)
             if session_key and session_key in reg:
             # if session_key and bool(REDIS_CONN.hexists(ACTIVE_SESSIONS, session_key)):
                 self.ctx['new_session'] = False
@@ -144,7 +144,7 @@ class SessionSetterHandler(RequestResponseHandler):
 
         # REDIS_CONN.hset(ACTIVE_SESSIONS, key=session_key, value=value)
 
-        reg = registry.BaseQueueRegistry(ACTIVE_SESSIONS, REDIS_CONN)
+        reg = registry.SessionRegistry(REDIS_CONN)
         reg.add(session_key, 10)
 
         self.ctx[SESSION_KEY] = session_key
@@ -181,7 +181,7 @@ class SessionUpdateHandler(RequestResponseHandler):
         # value = json.dumps(data, cls=DjangoJSONEncoder)
         # REDIS_CONN.hset(ACTIVE_SESSIONS, session_key, value=value)
 
-        reg = registry.BaseQueueRegistry(ACTIVE_SESSIONS, REDIS_CONN)
+        reg = registry.SessionRegistry(REDIS_CONN)
         reg.update_at_ttl(session_key, CDZSTAT_SESSION_AGE)
 
         # self.ctx[REQUEST_COUNT] = count

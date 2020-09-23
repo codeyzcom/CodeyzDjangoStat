@@ -2,11 +2,7 @@ import time
 
 from rq import Connection, Worker, Queue
 
-from cdzstat import (
-    REDIS_CONN,
-    services,
-    settings,
-)
+from cdzstat import services
 
 
 def run_rq_worker():
@@ -19,17 +15,10 @@ def run_rq_worker():
 class SessionWorker:
 
     def __init__(self):
-        self.q = Queue(connection=REDIS_CONN)
+        pass
 
     def run(self):
-        ps = REDIS_CONN.pubsub()
-        ps.subscribe(settings.CDZSTAT_QUEUE_SESSION)
-
+        s_gc = services.SessionGarbageCollectorService()
         while True:
-            # message = ps.get_message()
-            # if message and message.get('type') == 'message':
-                # dhs = services.DataHandlerService(message.get('data'))
-                # self.q.enqueue(dhs.process, result_ttl=5)
-            s_gc = services.SessionGarbageCollector()
             s_gc.execute()
             time.sleep(1)

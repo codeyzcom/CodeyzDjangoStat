@@ -1,18 +1,11 @@
 import json
-import re
 import time
 from uuid import uuid4
 
 from django.conf import settings
 
-from . import (
-    USER_AGENT_CACHE,
-    EXCEPTION_CACHE_REGEX,
-    EXCEPTION_CACHE_DIRECT,
-    REDIS_CONN,
-)
-from .settings import (
-    CDZSTAT_IGNORE_BOTS,
+from cdzstat import REDIS_CONN
+from cdzstat.settings import (
     CDZSTAT_SESSION_COOKIE_NAME,
     CDZSTAT_SESSION_AGE,
     CDZSTAT_REQUEST_NUM_NAME,
@@ -21,7 +14,6 @@ from .settings import (
     CDZSTAT_PERMANENT_COOKIE_AGE,
 )
 from cdzstat import (
-    ACTIVE_SESSIONS,
     models,
     utils,
     registry,
@@ -34,7 +26,7 @@ class SessionGarbageCollectorService:
         pass
     
     def execute(self):
-        reg = registry.BaseQueueRegistry(ACTIVE_SESSIONS, REDIS_CONN)
+        reg = registry.SessionRegistry(REDIS_CONN)
         expired_keys = reg.get_expired_keys()
 
         if expired_keys:
