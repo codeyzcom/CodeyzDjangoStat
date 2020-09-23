@@ -112,9 +112,8 @@ class SessionGetterHandler(RequestResponseHandler):
 
         if cookies:
             session_key = cookies.get(CDZSTAT_SESSION_COOKIE_NAME)
-            reg = registry.SessionRegistry(REDIS_CONN)
-            if session_key and session_key in reg:
-            # if session_key and bool(REDIS_CONN.hexists(ACTIVE_SESSIONS, session_key)):
+            session_registry = registry.SessionRegistry(REDIS_CONN)
+            if session_key and session_key in session_registry:
                 self.ctx['new_session'] = False
                 self.ctx[SESSION_KEY] = session_key
                 return
@@ -132,23 +131,11 @@ class SessionSetterHandler(RequestResponseHandler):
         response = self.ctx.get('response')
 
         session_key = str(uuid4())
-        # now = utils.get_dt()
-        # count = 1
-        # value = json.dumps({
-        #     'count': count,
-        #     'created_at': now,
-        #     'updated_at': now,
-        # },
-        #     cls=DjangoJSONEncoder
-        # )
 
-        # REDIS_CONN.hset(ACTIVE_SESSIONS, key=session_key, value=value)
-
-        reg = registry.SessionRegistry(REDIS_CONN)
-        reg.add(session_key, CDZSTAT_SESSION_AGE)
+        session_registry = registry.SessionRegistry(REDIS_CONN)
+        session_registry.add(session_key, CDZSTAT_SESSION_AGE)
 
         self.ctx[SESSION_KEY] = session_key
-        # self.ctx[REQUEST_COUNT] = count
 
         response.set_cookie(
             CDZSTAT_SESSION_COOKIE_NAME,
@@ -171,20 +158,8 @@ class SessionUpdateHandler(RequestResponseHandler):
         response = self.ctx.get('response')
         session_key = self.ctx.get(SESSION_KEY)
 
-        # raw_data = REDIS_CONN.hget(ACTIVE_SESSIONS, session_key)
-
-        # data = json.loads(raw_data)
-        # count = data.get('count', 1) + 1
-        # data['count'] = count
-        # data['updated_at'] = utils.get_dt()
-
-        # value = json.dumps(data, cls=DjangoJSONEncoder)
-        # REDIS_CONN.hset(ACTIVE_SESSIONS, session_key, value=value)
-
-        reg = registry.SessionRegistry(REDIS_CONN)
-        reg.update_at_ttl(session_key, CDZSTAT_SESSION_AGE)
-
-        # self.ctx[REQUEST_COUNT] = count
+        session_registry = registry.SessionRegistry(REDIS_CONN)
+        session_registry.update_at_ttl(session_key, CDZSTAT_SESSION_AGE)
 
         response.set_cookie(
             CDZSTAT_SESSION_COOKIE_NAME,
