@@ -28,6 +28,7 @@ REDIS_CONN = Redis(
 
 
 ## Constants
-ACTIVE_SESSIONS = 'active_sessions'
+ACTIVE_SESSIONS = 'cdzstat:registry:active_sessions'
 SESSION_KEY = 'session_key'
 REQUEST_COUNT = 'request_count'
+
