@@ -23,3 +23,10 @@ def exceptions(request):
     ctx = {'is_popup': False, 'is_nav_sidebar_enabled': True}
 
     return render(request, 'cdzstat/exceptions.html', context=ctx)
+
+
+@staff_member_required
+def sessions_board(request):
+    ctx = {'is_popup': False, 'is_nav_sidebar_enabled': True}
+
+    return render(request, 'cdzstat/sessions_board.html', ctx)

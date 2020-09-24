@@ -5,7 +5,7 @@ def get(key, default):
     return getattr(settings, key, default)
 
 
-CDZSTAT_IGNORE_BOTS = get('CDZSTAT_IGNORE_BOTS', True)
+CDZSTAT_PERSISTENCE_MODE = get('CDZSTAT_PERSISTENCE_MODE', True)
 
 CDZSTAT_SCRIPT_ID = '20200914879915'
 

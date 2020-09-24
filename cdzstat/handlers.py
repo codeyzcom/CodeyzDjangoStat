@@ -87,9 +87,9 @@ class RequestSetterHandler(RequestResponseHandler):
         response = self.ctx.get('response')
 
         new_request_key = str(uuid4())
+        self.ctx[CDZSTAT_REQUEST_COOKIE_NAME] = new_request_key
+        
         if response:
-            self.ctx[CDZSTAT_REQUEST_COOKIE_NAME] = new_request_key
-
             response.set_cookie(
                 CDZSTAT_REQUEST_COOKIE_NAME,
                 new_request_key,
