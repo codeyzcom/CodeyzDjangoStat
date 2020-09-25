@@ -8,4 +8,5 @@ urlpatterns = [
     path('cdzstat/dashboard/', views.dashboard, name='dashboard'),
     path('cdzstat/exceptions/', views.exceptions, name='exceptions'),
     path('cdzstat/sessions/', views.sessions_board, name='sessions'),
+    path('cdzstat/settings/', views.settings_board, name='settings'),
 ]
