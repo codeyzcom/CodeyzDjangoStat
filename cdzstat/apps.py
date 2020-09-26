@@ -7,5 +7,3 @@ class CdzstatConfig(AppConfig):
     def ready(self):
         from . import signals  # noqa
 
-        from cdzstat.services import ServiceUtils
-        ServiceUtils.initialize_data()

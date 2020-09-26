@@ -1,0 +1,27 @@
+{% extends 'cdzstat/base_cdzstat.html' %}
+
+
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        <a href="{% url 'admin:index' %}">Home</a> &rsaquo;
+        <a href="{% url 'cdzstat:dashboard' %}">CodeyzDjangoStat</a>
+        {% comment %} <a href = "{% url 'rq_jobs' queue_index %}">{{ queue.name }}</a> {% endcomment %}
+    </div>
+{% endblock %}
+
+
+{% block cdz_content %}
+    
+<div class="main shifted" id="main">
+
+    <div class="content">
+        <div id="content" class="colM">
+          
+          <h1>Sessions</h1>
+
+        </div>
+    <div>
+
+</div>
+
+{% endblock %}

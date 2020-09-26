@@ -1,0 +1,42 @@
+{% extends 'cdzstat/base_cdzstat.html' %}
+
+
+{% block breadcrumbs %}
+    <div class="breadcrumbs">
+        <a href="{% url 'admin:index' %}">Home</a> &rsaquo;
+        <a href="{% url 'cdzstat:exceptions' %}">Settings</a>
+    </div>
+{% endblock %}
+
+
+{% block cdz_content %}
+    
+<div class="main shifted" id="main">
+
+    <div class="content">
+        <div id="content" class="colM">
+          
+          <h1>Settings</h1>
+          <p>
+            The page can only view the settings. Changing the settings is done by overriding them in the django settings
+          </p>
+
+            <h2>Default CodeyzDjangoStat module settings</h2>
+            <ul>
+            {% for key, val in settings_native.items %}
+                <li>{{ key }}: <b>{{ val }}</b></li>
+            {% endfor %}
+            </ul>
+            <h2>Overridden module settings</h2>
+            <ul>
+            {% for key, val in settings_django.items %}
+                <li>{{ key }}: {{ val }}</li>
+            {% endfor %}
+            </ul>
+
+        </div>
+    <div>
+
+</div>
+
+{% endblock %}
