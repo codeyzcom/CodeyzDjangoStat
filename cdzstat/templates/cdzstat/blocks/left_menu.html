@@ -1,23 +1,23 @@
-
-  <nav class="sticky" id="nav-sidebar" >
-    <div class="module">
-      <table style="width: 100%;">
-        <caption>
-          <a href="{% url 'cdzstat:dashboard' %}" class="section" title="CodeyzDjangoStat">CodeyzDjangoStat</a>
-        </caption>
-          <tbody>
-          <tr class="model-browser">
-              <th scope="row"><a href="{% url 'cdzstat:dashboard' %}">Dashboard</a></th>
-          </tr>        
-          <tr class="model-browser">
-              <th scope="row"><a href="{% url 'cdzstat:exceptions' %}">Exceptions</a></th>
-          </tr>  
-          <tr class="model-browser">
-              <th scope="row"><a href="{% url 'cdzstat:sessions' %}">Sessions</a></th>
-          </tr>  
-          <tr class="model-browser">
-              <th scope="row"><a href="{% url 'cdzstat:settings' %}">Settings</a></th>
-          </tr>  
-      </tbody></table>
+<nav class="sidenav">
+    <div class="caption-cdz">
+      Codeyz Django Statistics
     </div>
-  </nav>    
+      <ul>
+        <li>
+          <a href="{% url 'cdzstat:dashboard' %}">Dashboard</a>
+        </li>
+        <li>
+          <a href="{% url 'cdzstat:exceptions' %}">Exceptions</a>
+        </li>
+        <li>
+          <a href="{% url 'cdzstat:sessions' %}">Sessions</a>
+        </li>
+        <li>
+          <a href="{% url 'cdzstat:settings' %}">Settings</a>
+        </li>
+        <li>
+
+        </li>
+      </ul>
+    </nav>
+    

@@ -16,28 +16,24 @@ def dummy_view(request):
 
 @staff_member_required
 def dashboard(request):
-    ctx = {'is_popup': False, 'is_nav_sidebar_enabled': True}
 
-    return render(request, 'cdzstat/dashboard.html', context=ctx)
+    return render(request, 'cdzstat/dashboard.html')
 
 
 @staff_member_required
 def exceptions(request):
-    ctx = {'is_popup': False, 'is_nav_sidebar_enabled': True}
-
-    return render(request, 'cdzstat/exceptions.html', context=ctx)
+    return render(request, 'cdzstat/exceptions.html')
 
 
 @staff_member_required
 def sessions_board(request):
-    ctx = {'is_popup': False, 'is_nav_sidebar_enabled': True}
 
-    return render(request, 'cdzstat/sessions_board.html', ctx)
+    return render(request, 'cdzstat/sessions_board.html')
 
 
 @staff_member_required
 def settings_board(request):
-    ctx = {'is_popup': False, 'is_nav_sidebar_enabled': True}
+    ctx = {}
 
     native = set([item for item in dir(native_settings) if item.startswith('CDZSTAT_')])
     django = set([item for item in dir(settings) if item.startswith('CDZSTAT_')])

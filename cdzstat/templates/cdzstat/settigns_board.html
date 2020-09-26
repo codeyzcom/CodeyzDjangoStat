@@ -5,12 +5,11 @@
     <div class="breadcrumbs">
         <a href="{% url 'admin:index' %}">Home</a> &rsaquo;
         <a href="{% url 'cdzstat:exceptions' %}">Settings</a>
-        {% comment %} <a href = "{% url 'rq_jobs' queue_index %}">{{ queue.name }}</a> {% endcomment %}
     </div>
 {% endblock %}
 
 
-{% block content %}
+{% block cdz_content %}
     
 <div class="main shifted" id="main">
 
