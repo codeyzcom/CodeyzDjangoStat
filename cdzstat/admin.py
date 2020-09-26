@@ -26,7 +26,7 @@ class PathAdmin(admin.ModelAdmin):
 
 @admin.register(models.IpAddress)
 class IpAddressAdmin(admin.ModelAdmin):
-    list_display = ('id', 'ip', 'dt_create')
+    list_display = ('id', 'ip')
     search_fields = ('ip',)
 
 
@@ -51,7 +51,6 @@ class TransitionAdmin(admin.ModelAdmin):
     )
 
 
-@admin.register(models.ExceptionPath)
 class ExceptionPathAdmin(admin.ModelAdmin):
     list_display = ('id', 'host', 'path', 'state')
 

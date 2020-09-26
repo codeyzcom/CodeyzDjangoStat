@@ -8,11 +8,6 @@ from cdzstat.settings import (
 
 default_app_config = 'cdzstat.apps.CdzstatConfig'
 
-EXCEPTION_TYPE = (
-    ('regex', 'By regular expression'),
-    ('match', 'Direct match')
-)
-
 HTTP_STATUSES = (
     ('200', '200: OK'),
     ('301', '301: Moved Permanently'),
@@ -30,3 +25,10 @@ REDIS_CONN = Redis(
     password=CDZSTAT_REDIS_PASS,
     decode_responses=True
 )
+
+
+## Constants
+ACTIVE_SESSIONS = 'cdzstat:registry:active_sessions'
+SESSION_KEY = 'session_key'
+REQUEST_COUNT = 'request_count'
+

@@ -1,6 +1,6 @@
 const SERVER_ADDRESS = 'http://127.0.0.1:8099/'
 const CDZ_SESSION_NAME = 'cdz_session'
-const CDZ_REQUEST_NUM_NAME = 'request_inc'
+const CDZ_REQUEST_KEY = 'request_key'
 
 function getCookie(name) {
     let cookieValue = null;
@@ -99,7 +99,7 @@ function measure_speed() {
 function collect_data() {
     let data = {};
     data['session_key'] = getCookie(CDZ_SESSION_NAME)
-    data['request_inc'] = getCookie(CDZ_REQUEST_NUM_NAME)
+    data['request_key'] = getCookie(CDZ_REQUEST_KEY)
     data['doc_ref'] = document.referrer;
     data['doc_url'] = document.URL;
     return data;
@@ -154,6 +154,13 @@ window.onload = function () {
     let data = collect_data();
     let param = collect_param();
     let speed = measure_speed();
-    sendDataPost({'data': data, 'param': param, 'speed': speed})
+    var timeStampInMs = window.performance && window.performance.now && window.performance.timing && window.performance.timing.navigationStart ? window.performance.now() + window.performance.timing.navigationStart : Date.now();
+
+    console.log(timeStampInMs, Date.now());
+    sendDataPost({
+        'cdzscript': 20200914879915,
+        'timestamp': timeStampInMs,
+        'data': data, 'params': param, 'speed': speed
+    })
 }
 

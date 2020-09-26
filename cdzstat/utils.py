@@ -1,17 +1,13 @@
+"""
+Miscellaneous helper functions.
+"""
 import random
+import calendar
 import string
+from datetime import datetime
 from urllib.parse import urlparse
 
 from django.utils.timezone import localtime
-
-
-def get_ip(request) -> str:
-    x_forwarded_for = request.META.get('HTTP_X_FORWARDED_FOR')
-    if x_forwarded_for:
-        ip = x_forwarded_for.split(',')[0]
-    else:
-        ip = request.META.get('REMOTE_ADDR')
-    return ip
 
 
 def split_url(url: str) -> dict:
@@ -29,6 +25,13 @@ def rand_symbols(length: int = 10) -> str:
 
 def get_dt():
     return localtime().today()
+
+
+def current_timestamp():
+    """
+    Returns current UTC timestamp
+    """
+    return calendar.timegm(datetime.utcnow().utctimetuple())
 
 
 def get_session(key: str) -> str:
