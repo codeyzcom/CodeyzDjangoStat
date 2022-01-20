@@ -1,6 +1,6 @@
 import time
 
-from cdzstat.poller import Poller
+from cdzstat.recorder import Recorder
 
 
 class StatCollector:
@@ -11,14 +11,12 @@ class StatCollector:
     def __call__(self, request):
         request.start_time = time.time()
 
-        start_time = time.time()
         response = self.get_response(request)
-        middle_time = time.time()
 
-        poller = Poller(request, response)
-        poller.execute()
+        recorder = Recorder(request, response)
+        recorder.execute()
 
         end_time = time.time()
 
-        print(f'\nPATH: {request.path}\nELAPSED: {end_time - start_time},\nRESP: {middle_time - start_time}\nCDZ: {end_time - middle_time}')
+        print(f'\n{request.path}  {end_time - request.start_time}')
         return response
