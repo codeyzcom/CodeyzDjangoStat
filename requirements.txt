@@ -1,5 +1,5 @@
 Django==4.0.1
-redis==3.5.0
+redis==4.4.4
 rq==1.4.2
 
 # Testing and codestyle
